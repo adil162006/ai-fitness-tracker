@@ -1,70 +1,107 @@
+'use client';
+
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 export default function LoginPage() {
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4 }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+      <motion.div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
         {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-            <svg 
-              className="w-7 h-7 text-white" 
-              fill="none" 
-              stroke="currentColor" 
+        <motion.div variants={itemVariants} className="flex justify-center mb-6">
+          <motion.div
+            className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center"
+            whileHover={{ rotate: 180, scale: 1.1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <svg
+              className="w-7 h-7 text-white"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M13 10V3L4 14h7v7l9-11h-7z" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z"
               />
             </svg>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-gray-800 text-center mb-2">
+        <motion.h1 variants={itemVariants} className="text-2xl font-bold text-gray-800 text-center mb-2">
           AI Fitness Tracker
-        </h1>
-        <p className="text-gray-500 text-center mb-6 text-sm">
+        </motion.h1>
+        <motion.p variants={itemVariants} className="text-gray-500 text-center mb-6 text-sm">
           Welcome back! Log in to continue your fitness journey
-        </p>
+        </motion.p>
 
         {/* Error Message - Hidden by default, can be shown conditionally */}
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2 hidden">
-          <svg 
-            className="w-5 h-5 text-red-500 flex-shrink-0" 
-            fill="currentColor" 
+        <motion.div
+          variants={itemVariants}
+          className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2 hidden"
+        >
+          <svg
+            className="w-5 h-5 text-red-500 flex-shrink-0"
+            fill="currentColor"
             viewBox="0 0 20 20"
           >
-            <path 
-              fillRule="evenodd" 
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" 
-              clipRule="evenodd" 
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+              clipRule="evenodd"
             />
           </svg>
           <span className="text-red-700 text-sm">Invalid email or password</span>
-        </div>
+        </motion.div>
 
         {/* Login Form */}
         <form action="/auth/login" method="GET" className="space-y-4">
           {/* Email Input */}
-          <div>
+          <motion.div variants={itemVariants}>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email Address
             </label>
-            <input
+            <motion.input
               type="email"
               id="email"
               name="email"
               placeholder="name@company.com"
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-gray-800 placeholder:text-gray-400"
+              whileFocus={{ scale: 1.01 }}
             />
-          </div>
+          </motion.div>
 
           {/* Password Input */}
-          <div>
+          <motion.div variants={itemVariants}>
             <div className="flex justify-between items-center mb-1">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
@@ -77,12 +114,13 @@ export default function LoginPage() {
               </Link>
             </div>
             <div className="relative">
-              <input
+              <motion.input
                 type="password"
                 id="password"
                 name="password"
                 placeholder="••••••••"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-gray-800 placeholder:text-gray-400"
+                whileFocus={{ scale: 1.01 }}
               />
               <button
                 type="button"
@@ -94,23 +132,22 @@ export default function LoginPage() {
                 </svg>
               </button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Login Button */}
-          <button
+          <motion.button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-sm"
+            variants={itemVariants}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             Log in
-          </button>
+          </motion.button>
         </form>
 
-        
-
-        
-
         {/* Sign Up Link */}
-        <p className="text-center text-gray-600 text-sm mt-6">
+        <motion.p variants={itemVariants} className="text-center text-gray-600 text-sm mt-6">
           Don&apos;t have an account?{' '}
           <Link
             href="/auth/signup"
@@ -118,8 +155,8 @@ export default function LoginPage() {
           >
             Sign up
           </Link>
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
     </div>
   );
 }

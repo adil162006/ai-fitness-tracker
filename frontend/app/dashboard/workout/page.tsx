@@ -1,14 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dumbbell, ChevronRight, Zap, Play, Calendar, FileText } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function WorkoutPage() {
-  const todaysDate = new Date().toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+  const [todaysDate, setTodaysDate] = useState<string>('');
+
+  useEffect(() => {
+    setTodaysDate(new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }));
+  }, []);
+
   const workoutType = "Push Day Focus";
 
   const todaysPlan = {
@@ -61,28 +67,64 @@ export default function WorkoutPage() {
     aiExplanation: "Today's workout targets your lower body with a focus on compound movements. Your recovery metrics show you're ready for heavier loads. The progressive overload on squats will help break through your current plateau."
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4 }
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <motion.div
+      className="max-w-7xl mx-auto space-y-6"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div variants={itemVariants} className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Today&apos;s AI Workout Plan</h1>
           <p className="text-gray-500 mt-1">{todaysDate}</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+          <motion.button
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
             <Calendar size={18} />
             <span className="font-medium">View History</span>
-          </button>
-          <button className="flex items-center gap-2 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors">
+          </motion.button>
+          <motion.button
+            className="flex items-center gap-2 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             <Play size={18} />
             <span>Start Workout</span>
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Workout Overview Card */}
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
+      <motion.div
+        variants={itemVariants}
+        className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white"
+        whileHover={{ scale: 1.01 }}
+      >
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-2xl font-bold mb-2">{workoutType}</h2>
@@ -103,7 +145,12 @@ export default function WorkoutPage() {
         </div>
 
         {/* AI Explanation */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+        <motion.div
+          className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
           <div className="flex gap-3">
             <FileText size={20} className="flex-shrink-0 mt-0.5" />
             <div>
@@ -113,11 +160,11 @@ export default function WorkoutPage() {
               </p>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Exercise List */}
-      <div className="bg-white rounded-2xl shadow-sm">
+      <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-xl font-bold text-gray-800">Exercise Breakdown</h3>
           <p className="text-sm text-gray-500 mt-1">
@@ -127,16 +174,23 @@ export default function WorkoutPage() {
 
         <div className="divide-y divide-gray-200">
           {todaysPlan.exercises.map((exercise, index) => (
-            <div
+            <motion.div
               key={index}
-              className="p-6 hover:bg-gray-50 transition-colors cursor-pointer group"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 + 0.4, duration: 0.5 }}
+              whileHover={{ backgroundColor: "rgba(249,250,251,1)", scale: 1.005 }}
+              className="p-6 cursor-pointer group"
             >
               <div className="flex items-start justify-between">
                 <div className="flex gap-4 flex-1">
                   {/* Exercise Number */}
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center font-bold text-blue-600 flex-shrink-0">
+                  <motion.div
+                    className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center font-bold text-blue-600 flex-shrink-0"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
                     {index + 1}
-                  </div>
+                  </motion.div>
 
                   {/* Exercise Details */}
                   <div className="flex-1">
@@ -180,21 +234,29 @@ export default function WorkoutPage() {
                   size={24}
                 />
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Action Buttons */}
-      <div className="flex gap-4">
-        <button className="flex-1 py-4 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+      <motion.div variants={itemVariants} className="flex gap-4">
+        <motion.button
+          className="flex-1 py-4 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+        >
           Regenerate Plan
-        </button>
-        <button className="flex-1 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+        </motion.button>
+        <motion.button
+          className="flex-1 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+        >
           <Play size={20} />
           Begin Workout
-        </button>
-      </div>
-    </div>
+        </motion.button>
+      </motion.div>
+    </motion.div>
   );
 }

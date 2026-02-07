@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dumbbell,
   Activity,
@@ -12,6 +12,31 @@ import {
   Target,
   Calendar as CalendarIcon
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+// Animated counter component
+const AnimatedNumber: React.FC<{ value: number; duration?: number }> = ({ value, duration = 2 }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = value;
+    if (end === 0) {
+      setCount(0);
+      return;
+    }
+    const incrementTime = (duration * 1000) / end;
+    const timer = setInterval(() => {
+      start += 1;
+      setCount(start);
+      if (start === end) clearInterval(timer);
+    }, incrementTime);
+
+    return () => clearInterval(timer);
+  }, [value, duration]);
+
+  return <>{count}</>;
+};
 
 export default function DashboardPage() {
   // Static data - will be replaced with API calls
@@ -56,28 +81,63 @@ export default function DashboardPage() {
 
   const nextCheckIn = "In 4h";
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Today's Plan - Large Card */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
+        <motion.div
+          variants={itemVariants}
+          className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6"
+        >
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold text-gray-800">{todaysPlan.title}</h2>
               <p className="text-sm text-gray-500">{todaysPlan.focus}</p>
             </div>
-            <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors">
+            <motion.button
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
               Start Workout
-            </button>
+            </motion.button>
           </div>
 
           {/* Exercise List */}
           <div className="space-y-3">
             {todaysPlan.exercises.map((exercise, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer group"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                whileHover={{ scale: 1.01, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-xl transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center font-semibold text-gray-600">
@@ -91,7 +151,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <ChevronRight className="text-gray-400 group-hover:text-gray-600 transition-colors" size={20} />
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -107,12 +167,12 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Right Column - Cards */}
-        <div className="space-y-6">
+        <motion.div variants={itemVariants} className="space-y-6">
           {/* Fatigue & Recovery */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <motion.div className="bg-white rounded-2xl shadow-sm p-6" whileHover={{ y: -2 }}>
             <div className="flex items-center gap-2 mb-4">
               <Activity className="text-blue-500" size={20} />
               <h3 className="font-bold text-gray-800">Fatigue & Recovery</h3>
@@ -126,20 +186,22 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-500 h-2 rounded-full transition-all"
-                    style={{ width: `${recoveryStatus.percentage}%` }}
-                  ></div>
+                  <motion.div
+                    className="bg-green-500 h-2 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${recoveryStatus.percentage}%` }}
+                    transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
+                  />
                 </div>
               </div>
               <p className="text-xs text-gray-500 leading-relaxed">
                 {recoveryStatus.message}
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Nutrition AI */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <motion.div className="bg-white rounded-2xl shadow-sm p-6" whileHover={{ y: -2 }}>
             <div className="flex items-center gap-2 mb-4">
               <Target className="text-orange-500" size={20} />
               <h3 className="font-bold text-gray-800">Nutrition AI</h3>
@@ -152,16 +214,18 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-orange-500 h-2 rounded-full transition-all"
-                  style={{ width: `${(nutritionGoal.protein.current / nutritionGoal.protein.target) * 100}%` }}
-                ></div>
+                <motion.div
+                  className="bg-orange-500 h-2 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(nutritionGoal.protein.current / nutritionGoal.protein.target) * 100}%` }}
+                  transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
+                />
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Friend Streaks */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <motion.div className="bg-white rounded-2xl shadow-sm p-6" whileHover={{ y: -2 }}>
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="text-blue-500" size={20} />
               <h3 className="font-bold text-gray-800">Friend Streaks</h3>
@@ -182,10 +246,10 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Activity Log Calendar */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <motion.div className="bg-white rounded-2xl shadow-sm p-6" whileHover={{ y: -2 }}>
             <div className="flex items-center gap-2 mb-4">
               <CalendarIcon className="text-blue-500" size={20} />
               <h3 className="font-bold text-gray-800">Activity Log</h3>
@@ -195,23 +259,29 @@ export default function DashboardPage() {
                 <div key={index} className="text-center">
                   <div className="text-xs text-gray-500 mb-2">{day}</div>
                   <div
-                    className={`w-8 h-8 rounded-lg mx-auto ${
-                      activityCalendar.activities[index]
-                        ? 'bg-green-500'
-                        : 'bg-gray-200'
-                    }`}
-                  ></div>
+                    className={`w-8 h-8 rounded-lg mx-auto ${activityCalendar.activities[index]
+                      ? 'bg-green-500'
+                      : 'bg-gray-200'
+                      }`}
+                  />
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Weekly Stats - Bottom Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {weeklyStats.map((stat, index) => (
-          <div key={index} className="bg-white rounded-2xl shadow-sm p-6">
+          <motion.div
+            key={index}
+            className="bg-white rounded-2xl shadow-sm p-6"
+            whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.1 + 0.5 }}
+          >
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
                 <stat.icon className="text-blue-500" size={20} />
@@ -222,12 +292,16 @@ export default function DashboardPage() {
               <span className="text-3xl font-bold text-gray-800">{stat.value}</span>
               <span className="text-gray-500 ml-2">{stat.unit}</span>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Next AI Check-In */}
-      <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl shadow-sm p-6 text-white">
+      <motion.div
+        variants={itemVariants}
+        className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl shadow-sm p-6 text-white"
+        whileHover={{ scale: 1.01 }}
+      >
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-lg mb-1">Next AI Check-In</h3>
@@ -235,12 +309,16 @@ export default function DashboardPage() {
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold">{nextCheckIn}</div>
-            <button className="mt-2 bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">
+            <motion.button
+              className="mt-2 bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               Schedule Now
-            </button>
+            </motion.button>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

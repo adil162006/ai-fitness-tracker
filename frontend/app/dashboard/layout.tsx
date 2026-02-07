@@ -14,6 +14,7 @@ import {
   Bell,
   LogOut
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DashboardLayout({
   children,
@@ -21,7 +22,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [mounted, setMounted] = React.useState(false);
   const pathname = usePathname();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -36,9 +42,8 @@ export default function DashboardLayout({
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <aside
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'
+          } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
       >
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
@@ -61,16 +66,31 @@ export default function DashboardLayout({
                 <li key={index}>
                   <Link
                     href={item.path}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-600 hover:bg-gray-50'
+                      }`}
                   >
-                    <item.icon size={20} />
-                    {sidebarOpen && (
-                      <span className="font-medium">{item.label}</span>
-                    )}
+                    <motion.div
+                      className="flex items-center gap-3 w-full"
+                      whileHover={{ x: 4 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <item.icon size={20} />
+                      <AnimatePresence>
+                        {sidebarOpen && (
+                          <motion.span
+                            className="font-medium"
+                            initial={{ opacity: 0, width: 0 }}
+                            animate={{ opacity: 1, width: "auto" }}
+                            exit={{ opacity: 0, width: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   </Link>
                 </li>
               );
@@ -79,25 +99,39 @@ export default function DashboardLayout({
         </nav>
 
         {/* Pro Plan Banner */}
-        {sidebarOpen && (
-          <div className="p-4 m-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white">
-            <p className="text-sm font-semibold mb-1">PRO PLAN</p>
-            <p className="text-xs mb-3 opacity-90">
-              Unlock all AI features and advanced tracking
-            </p>
-            <button className="w-full bg-white text-blue-600 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">
-              Upgrade Now
-            </button>
-          </div>
-        )}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              className="p-4 m-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <p className="text-sm font-semibold mb-1">PRO PLAN</p>
+              <p className="text-xs mb-3 opacity-90">
+                Unlock all AI features and advanced tracking
+              </p>
+              <motion.button
+                className="w-full bg-white text-blue-600 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Upgrade Now
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Toggle Sidebar Button */}
-        <button
+        <motion.button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-4 border-t border-gray-200 hover:bg-gray-50 transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <Menu size={20} className="text-gray-600" />
-        </button>
+        </motion.button>
       </aside>
 
       {/* Main Content */}
@@ -109,12 +143,12 @@ export default function DashboardLayout({
             <div>
               <h1 className="text-2xl font-bold text-gray-800">Welcome back, Alex</h1>
               <p className="text-sm text-gray-500">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
+                {mounted ? new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                }) : ''}
               </p>
             </div>
 
@@ -144,9 +178,15 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <motion.main
+          className="flex-1 overflow-y-auto p-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          key={pathname}
+        >
           {children}
-        </main>
+        </motion.main>
       </div>
     </div>
   );

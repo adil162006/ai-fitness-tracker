@@ -25,9 +25,14 @@ export default function WorkoutLogPage() {
   const [exercises, setExercises] = useState<Exercise[]>([
     { name: 'Bench Press', sets: 3, reps: 10, weight: 185, intensity: 'Medium' }
   ]);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const todaysPlan = {
-    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    date: mounted ? new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
     exercises: [
       { name: 'Barbell Squats', sets: '3 sets x 10 reps', weight: '185lbs' },
       { name: 'Deadlifts', sets: '3 sets x 8 reps', weight: '225lbs' },
@@ -266,7 +271,7 @@ export default function WorkoutLogPage() {
           {/* Quick Stats */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <h3 className="font-bold text-gray-800 mb-4">Quick Stats</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Weekly Streak</p>

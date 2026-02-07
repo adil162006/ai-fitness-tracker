@@ -1,24 +1,24 @@
 "use client"
 import React, { useEffect } from 'react';
-import { 
-  Bolt, 
-  Cpu, 
-  PlayCircle, 
-  Dumbbell, 
-  Zap, 
-  HeartPulse, 
-  BarChart3, 
-  Apple, 
-  Users, 
-  Check, 
-  Share2, 
-  Mail, 
-  Globe, 
+import {
+  Bolt,
+  Cpu,
+  PlayCircle,
+  Dumbbell,
+  Zap,
+  HeartPulse,
+  BarChart3,
+  Apple,
+  Users,
+  Check,
+  Share2,
+  Mail,
+  Globe,
   ShieldCheck,
   Menu,
   X
-} from 'lucide-react';  
-import { motion, useAnimation } from 'framer-motion';
+} from 'lucide-react';
+import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useRouter } from 'next/navigation';
 
@@ -64,7 +64,7 @@ const Navbar = () => {
           </div>
           <h2 className="text-xl font-bold tracking-tight text-gray-900">AI Fitness Tracker</h2>
         </div>
-        
+
         <div className="hidden md:flex items-center gap-8">
           <a href="#features" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Features</a>
           <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">How it Works</a>
@@ -72,7 +72,7 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all active:scale-95" onClick={()=>router.push("/auth/signup")}>
+          <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all active:scale-95" onClick={() => router.push("/auth/signup")}>
             Sign in
           </button>
           <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
@@ -82,13 +82,21 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-white border-b border-gray-100 px-6 py-6 flex flex-col gap-4">
-          <a href="#features" className="text-sm font-medium text-gray-600" onClick={() => setIsOpen(false)}>Features</a>
-          <a href="#how-it-works" className="text-sm font-medium text-gray-600" onClick={() => setIsOpen(false)}>How it Works</a>
-          <a href="#testimonials" className="text-sm font-medium text-gray-600" onClick={() => setIsOpen(false)}>Testimonials</a>
-        </div>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="md:hidden bg-white border-b border-gray-100 px-6 py-6 flex flex-col gap-4"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <a href="#features" className="text-sm font-medium text-gray-600" onClick={() => setIsOpen(false)}>Features</a>
+            <a href="#how-it-works" className="text-sm font-medium text-gray-600" onClick={() => setIsOpen(false)}>How it Works</a>
+            <a href="#testimonials" className="text-sm font-medium text-gray-600" onClick={() => setIsOpen(false)}>Testimonials</a>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };
@@ -155,7 +163,7 @@ export default function LandingPage() {
 
           <ScrollReveal delay={0.3}>
             <div className="flex flex-col sm:flex-row gap-4 mb-24">
-              <button className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg shadow-green-500/10 transition-all active:scale-95" onClick={()=>router.push("/auth/signup")}>
+              <button className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg shadow-green-500/10 transition-all active:scale-95" onClick={() => router.push("/auth/signup")}>
                 Get Started
               </button>
               <button className="flex items-center justify-center gap-2 bg-white border border-gray-200 hover:border-gray-300 px-8 py-4 rounded-full text-lg font-semibold text-gray-900 transition-all active:scale-95">
@@ -170,10 +178,10 @@ export default function LandingPage() {
               <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-green-400/10 rounded-full blur-[100px]"></div>
               <div className="bg-white rounded-3xl border border-gray-100 p-3 shadow-2xl transition-transform duration-500 group-hover:scale-[1.01]">
                 <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden shadow-inner">
-                  <img 
-                    alt="Modern dashboard with AI fitness charts and biometrics" 
-                    className="w-full h-auto" 
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD56AfucqsCghmjnHJMu2eVnqIvQ8G8ZXzARw6LlCrXxgKmwN6lx_X452YxU_h8TQIEKa_eCNGutJVbDhUKdGGYc-vWgWMOGAHU3v5Ac1X3_K4Ye3EAL7bnKD0-pf0BSbKaNh7YXnzQc7IL56EX028kWtQF2vlhIe5tQ2Av3iF-fwl6Q2uI-6DS3ShpO0cLImS5iij6xXSB4qsr7NcIJLqN5UcT_2OlNMR5lnodJIa8DoR-xYU93olVwsVvqMuSmClmankr1KS1xw" 
+                  <img
+                    alt="Modern dashboard with AI fitness charts and biometrics"
+                    className="w-full h-auto"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD56AfucqsCghmjnHJMu2eVnqIvQ8G8ZXzARw6LlCrXxgKmwN6lx_X452YxU_h8TQIEKa_eCNGutJVbDhUKdGGYc-vWgWMOGAHU3v5Ac1X3_K4Ye3EAL7bnKD0-pf0BSbKaNh7YXnzQc7IL56EX028kWtQF2vlhIe5tQ2Av3iF-fwl6Q2uI-6DS3ShpO0cLImS5iij6xXSB4qsr7NcIJLqN5UcT_2OlNMR5lnodJIa8DoR-xYU93olVwsVvqMuSmClmankr1KS1xw"
                   />
                 </div>
               </div>
@@ -194,50 +202,50 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ScrollReveal delay={0.1}>
-              <FeatureCard 
-                icon={<Dumbbell className="text-blue-600" />} 
-                title="AI Workout Plans" 
-                desc="Dynamic routines that evolve daily based on your biometric feedback and performance metrics." 
+              <FeatureCard
+                icon={<Dumbbell className="text-blue-600" />}
+                title="AI Workout Plans"
+                desc="Dynamic routines that evolve daily based on your biometric feedback and performance metrics."
                 color="bg-blue-50"
               />
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
-              <FeatureCard 
-                icon={<Zap className="text-green-600" />} 
-                title="Fatigue Insights" 
-                desc="Understand exactly when to push for a new PR and when your body requires essential recovery time." 
+              <FeatureCard
+                icon={<Zap className="text-green-600" />}
+                title="Fatigue Insights"
+                desc="Understand exactly when to push for a new PR and when your body requires essential recovery time."
                 color="bg-green-50"
               />
             </ScrollReveal>
             <ScrollReveal delay={0.3}>
-              <FeatureCard 
-                icon={<HeartPulse className="text-blue-600" />} 
-                title="Recovery Tracking" 
-                desc="Maximize gains with precision data tracking your HRV, sleep quality, and muscle readiness." 
+              <FeatureCard
+                icon={<HeartPulse className="text-blue-600" />}
+                title="Recovery Tracking"
+                desc="Maximize gains with precision data tracking your HRV, sleep quality, and muscle readiness."
                 color="bg-blue-50"
               />
             </ScrollReveal>
             <ScrollReveal delay={0.4}>
-              <FeatureCard 
-                icon={<BarChart3 className="text-green-600" />} 
-                title="Real-time Analysis" 
-                desc="Instant feedback on your form and performance using computer vision and sensor fusion technologies." 
+              <FeatureCard
+                icon={<BarChart3 className="text-green-600" />}
+                title="Real-time Analysis"
+                desc="Instant feedback on your form and performance using computer vision and sensor fusion technologies."
                 color="bg-green-50"
               />
             </ScrollReveal>
             <ScrollReveal delay={0.5}>
-              <FeatureCard 
-                icon={<Apple className="text-blue-600" />} 
-                title="Macro Optimization" 
-                desc="Smart nutrition plans tailored to your specific goals, body type, and daily energy expenditure." 
+              <FeatureCard
+                icon={<Apple className="text-blue-600" />}
+                title="Macro Optimization"
+                desc="Smart nutrition plans tailored to your specific goals, body type, and daily energy expenditure."
                 color="bg-blue-50"
               />
             </ScrollReveal>
             <ScrollReveal delay={0.6}>
-              <FeatureCard 
-                icon={<Users className="text-green-600" />} 
-                title="Social Challenges" 
-                desc="Compete in AI-refereed challenges and grow with a community of performance-minded athletes." 
+              <FeatureCard
+                icon={<Users className="text-green-600" />}
+                title="Social Challenges"
+                desc="Compete in AI-refereed challenges and grow with a community of performance-minded athletes."
                 color="bg-green-50"
               />
             </ScrollReveal>
@@ -265,7 +273,7 @@ export default function LandingPage() {
             <ScrollReveal delay={0.3}>
               <StepCard step={3} title="Track & Adapt" desc="Watch your plan evolve daily as the AI learns from your body's response." />
             </ScrollReveal>
-            
+
             {/* Connecting line */}
             <div className="hidden md:block absolute top-8 left-[15%] right-[15%] h-[1px] bg-gray-200 -z-0"></div>
           </div>
@@ -278,10 +286,10 @@ export default function LandingPage() {
           <ScrollReveal>
             <div className="relative">
               <div className="bg-blue-50 absolute -inset-6 rounded-[2rem] -z-10"></div>
-              <img 
-                alt="Athlete using a mobile app to check fitness progress" 
-                className="relative rounded-[2rem] shadow-xl w-full object-cover aspect-square" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYL-IfhXSE-AqjU4OPZgYfjlVVxquR3LLbJ3FTSpY6LQ8LEcCc9I_oe4xr1JWk1nPB8OJLSJ1gFwBuPhYPSUWTvEUitq7iIgu6LA8rSUBFRjU1evzAk5ecPhHC9TRrGE3oNTnNg8s9Wmah-vSl0PH1g38pYcpxS9fur0AGcVek_6Cmt7x5cm78cDgC3OCRf9tVStS1HN0EEZxpFqpGj4TzHoHY99vzLYzCz4TKyYGakTr3H7msWxHgja8CFgXOKzKHhfFZtaJRug" 
+              <img
+                alt="Athlete using a mobile app to check fitness progress"
+                className="relative rounded-[2rem] shadow-xl w-full object-cover aspect-square"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYL-IfhXSE-AqjU4OPZgYfjlVVxquR3LLbJ3FTSpY6LQ8LEcCc9I_oe4xr1JWk1nPB8OJLSJ1gFwBuPhYPSUWTvEUitq7iIgu6LA8rSUBFRjU1evzAk5ecPhHC9TRrGE3oNTnNg8s9Wmah-vSl0PH1g38pYcpxS9fur0AGcVek_6Cmt7x5cm78cDgC3OCRf9tVStS1HN0EEZxpFqpGj4TzHoHY99vzLYzCz4TKyYGakTr3H7msWxHgja8CFgXOKzKHhfFZtaJRug"
               />
             </div>
           </ScrollReveal>
@@ -329,7 +337,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <ScrollReveal delay={0.1}>
-              <TestimonialCard 
+              <TestimonialCard
                 img="https://lh3.googleusercontent.com/aida-public/AB6AXuCmrgWRBWXIrI-BQCAXBuB1-bUkhVEH-MDLeE-bYdJjXl6JDt3H_n_rJwh27-j-7c28FHHsJ6W8XnJPadzSREo7MklwPZxnF9kRUSR57nBPebILqvBMRBz9lyW4u7SGGdEjjnVwHbDScPpunFCHcc6YreIQnR1ZlgFlc7EXik0xpzHU1HJP1mRRPu7htSXwVoUG0eX37qOVN_DMrNH_FbQEYPocqn5-3GMfteRSvGZCYFBA7jrgid_cWzaEhUfyEJoDsuqkH0fCbQ"
                 name="Sarah Jenkins"
                 role="Pro Marathoner"
@@ -337,7 +345,7 @@ export default function LandingPage() {
               />
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
-              <TestimonialCard 
+              <TestimonialCard
                 img="https://lh3.googleusercontent.com/aida-public/AB6AXuCMGfBr203HjW2Js4iIvSrtNSmNXgCIuQ7-ZpEkfGvnjXs_1g6X-ynPyES-zj1FV44qU7oMzXPqGaZyaAK0WOznqWFT3P7egBGXDUp7Rys9AubnwkEZEiFIpqDrrmb4-96DngnqN7DR6w3iLeBqLawTklyIuqo9raopoV9E5psuRuJN1I7Bj3Q58SylJ70cFdW_L0O8MY5oBbNN5jNuwlmOIlpWk0RFdo8RwL_r300MpirpCHaLRbJL5_5jo8_SPQOa_DnOF9dT2A"
                 name="Mark Thompson"
                 role="Fitness Enthusiast"
@@ -345,7 +353,7 @@ export default function LandingPage() {
               />
             </ScrollReveal>
             <ScrollReveal delay={0.3}>
-              <TestimonialCard 
+              <TestimonialCard
                 img="https://lh3.googleusercontent.com/aida-public/AB6AXuB6E6AxECJrphnOqH8oi8PsuaBSWdVpiQoTIBQF5sSnk242pQCr_8B8Efi8FOW95KR7rDzRhiWYKlJqNpG_aXxY5R17a-mEOX3zsliJc4wZqsspEnGAKVhf3C16Qscjl9j-GyI5udRSPPtQImKU5pJS8CbCrw67vHUNuRng5kEvtN8w-ShYyZ7QNVkzxAHYrdhrhvCQYlNkS-LnnHdHFpgWsoksLfEMBPt953t6Wrm5uGsf9_NHmmHmXvyfwSssvhiylVJTBEWj9A"
                 name="David Chen"
                 role="Crossfit Athlete"
@@ -368,9 +376,9 @@ export default function LandingPage() {
             <div className="relative z-10">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 tracking-tight">Ready to transcend your limits?</h2>
               <p className="text-blue-50 text-lg md:text-xl max-w-2xl mx-auto mb-12">
-                 No credit card required. Experience the power of AI fitness coaching.
+                No credit card required. Experience the power of AI fitness coaching.
               </p>
-              <button className="bg-white text-blue-600 hover:bg-blue-50 px-10 py-5 rounded-full text-xl font-bold transition-all shadow-xl active:scale-95" onClick={()=>router.push('/auth/signup')}>
+              <button className="bg-white text-blue-600 hover:bg-blue-50 px-10 py-5 rounded-full text-xl font-bold transition-all shadow-xl active:scale-95" onClick={() => router.push('/auth/signup')}>
                 Join Now
               </button>
             </div>
@@ -392,7 +400,7 @@ export default function LandingPage() {
               Building the future of human performance through artificial intelligence and data science.
             </p>
           </div>
-          
+
           <div>
             <h5 className="font-bold mb-6 text-gray-900">Product</h5>
             <ul className="space-y-4 text-sm text-gray-500">
