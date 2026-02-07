@@ -3,9 +3,10 @@
 // =============================
 
 export interface SignupForm {
-  name: string;
+  fullName: string;
   email: string;
   password: string;
+  confirmPassword:string
 }
 
 export interface LoginForm {

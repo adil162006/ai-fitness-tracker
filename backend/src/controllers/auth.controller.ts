@@ -1,10 +1,11 @@
 import supabase from "../lib/supabase";
 import type { Request, Response } from "express";
 import AsyncHandler from "../lib/AsyncHandler";
+import  type { LoginForm,SignupForm } from "../types";
 
 export const signupController = AsyncHandler(
   async (req: Request, res: Response) => {
-    const { fullName, email, password, confirmPassword } = req.body;
+    const { fullName, email, password, confirmPassword } = req.body as SignupForm;
 
     if (!fullName || !email || !password || !confirmPassword) {
       return res.status(400).json({
@@ -74,7 +75,7 @@ export const signupController = AsyncHandler(
 
 export const loginController = AsyncHandler(
   async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body as LoginForm;
 
     if (!email || !password) {
       return res.status(400).json({
