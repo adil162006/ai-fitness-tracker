@@ -1,9 +1,10 @@
 import express from 'express'
 import cors from "cors"
 import type { Request,Response } from 'express';
-
+import cookieParser from 'cookie-parser';
 import { Router } from "express";
 import authRoutes from './routes/auth.routes'
+import userRoutes from './routes/user.route'
 
 const router = Router();
 const app =express();
@@ -17,10 +18,11 @@ app.use(
     credentials: true, // allow credentials from client (cookies, authorization headers, etc.)
   })
 );
-
+app.use(cookieParser());
 
 app.use(express.json()); // parses incoming JSON request bodies and makes them available as req.body in your route handlers
 app.use("/api/auth", authRoutes);
+app.use("/api/user",userRoutes)
 app.get("/health", (req:Request, res:Response) => {
   res.json({ status: "ok", message: "Server is running" });
 });
