@@ -105,6 +105,21 @@ export const loginController = AsyncHandler(
       });
     }
 
+    // Query extra user info from your "users" table
+    const { data: profileData, error: profileError } = await supabase
+      .from("users")
+      .select("profile_completed")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching user profile",
+      });
+    }
+
+    // Set cookie
     if (data.session?.access_token) {
       res.cookie("sb-access-token", data.session.access_token, {
         httpOnly: true,
@@ -117,7 +132,51 @@ export const loginController = AsyncHandler(
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      user,
+      user: {
+        ...user,
+        profile_completed: profileData?.profile_completed || false,
+      },
     });
   }
 );
+export const logoutController =AsyncHandler(
+  async(req:Request,res:Response)=>{
+    const token = 
+        req.cookies['sb-access-token'] || 
+        req.headers.authorization?.split(' ')[1];
+
+      if (!token) {
+        // No token found, just clear cookie if exists
+        res.clearCookie('sb-access-token', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: "No active session",
+        });
+      }
+
+      // Sign out from Supabase (invalidates the session)
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error('Supabase signOut error:', error);
+        // Continue to clear cookie even if Supabase signOut fails
+      }
+
+      // Clear the cookie
+      res.clearCookie('sb-access-token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Logout successful",
+      });
+  }
+)

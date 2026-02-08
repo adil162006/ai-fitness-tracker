@@ -49,3 +49,12 @@ export interface CompleteProfileForm {
   experienceLevel: ExperienceLevel;
   weeklyAvailability: WeeklyAvailability;
 }
+export interface UpdateProfileForm{
+  fullName: string;
+  age:number;
+  height:number;
+  weight: number;
+  fitnessGoal: FitnessGoal;
+  experienceLevel: ExperienceLevel;
+  weeklyAvailability: WeeklyAvailability;
+}
