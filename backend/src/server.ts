@@ -9,7 +9,7 @@ import userRoutes from './routes/user.route'
 const router = Router();
 const app =express();
 const allowedOrigins = [
-  "http://localhost:3000    ", // Next js
+  "http://localhost:3000", // Next js
 ].filter(Boolean);
 
 app.use(
