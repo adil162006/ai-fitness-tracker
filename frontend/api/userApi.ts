@@ -1,23 +1,32 @@
 import axiosInstance from "@/lib/axios";
-import { data } from "framer-motion/client";
-export type FitnessGoal =
+
+type FitnessGoal =
   | "lose-weight"
   | "gain-muscle"
   | "stay-fit"
   | "improve-strength"
   | "endurance";
 
-export type ExperienceLevel =
+ type ExperienceLevel =
   | "beginner"
   | "intermediate"
   | "advanced";
 
-export type WeeklyAvailability =
+ type WeeklyAvailability =
   | "1-2"
   | "3-4"
   | "5-6"
   | "daily";
-export interface CompleteProfileData {
+ interface CompleteProfileData {
+  age: number;
+  height: number;
+  weight: number;
+  fitnessGoal: FitnessGoal;
+  experienceLevel: ExperienceLevel;
+  weeklyAvailability: WeeklyAvailability;
+}
+interface UpdateUserData{
+  fullName:string;
   age: number;
   height: number;
   weight: number;
@@ -26,9 +35,19 @@ export interface CompleteProfileData {
   weeklyAvailability: WeeklyAvailability;
 }
 
+
+
 export const userApi={
+  getme:async()=>{
+    const response = await axiosInstance.get('/user/getMe');
+    return response.data
+  },
     completeProfile : async (data:CompleteProfileData)=>{
-    const response = await axiosInstance.post('/auth/complete-profile', data);
+    const response = await axiosInstance.post('/user/complete-profile', data);
     return response.data;
+    },
+    updateUser:async (data:UpdateUserData)=>{
+      const response = await axiosInstance.patch('/user/update-profile',data)
+      return response.data;
     }
 }
