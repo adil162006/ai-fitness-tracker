@@ -3,6 +3,57 @@ import type { Request, Response } from "express";
 import AsyncHandler from "../lib/AsyncHandler";
 import type {CompleteProfileForm,UpdateProfileForm} from '../types/index'
 
+export const getMe = AsyncHandler(
+  async (req: Request, res: Response) => {
+    // 1️⃣ Get token from cookie OR Authorization header
+    const token =
+      req.cookies["sb-access-token"] ||
+      req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: No token provided",
+      });
+    }
+
+    // 2️⃣ Get authenticated user from Supabase
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
+      });
+    }
+
+    // 3️⃣ Fetch user profile from your "users" table
+    const { data: userData, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    // 4️⃣ Return response
+    res.status(200).json({
+      success: true,
+      user: userData,
+    });
+  }
+);
+
+
+
 
 export const updateUserProfile = AsyncHandler(
   async(req:Request,res:Response)=>{
@@ -45,7 +96,6 @@ export const updateUserProfile = AsyncHandler(
     
   }
 )
-
 
 export const completeUserProfile = AsyncHandler(
   async (req: Request, res: Response) => {
