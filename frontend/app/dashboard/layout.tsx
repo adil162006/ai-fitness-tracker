@@ -15,6 +15,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { mockUser } from '@/lib/mockData';
 
 export default function DashboardLayout({
   children,
@@ -98,30 +99,7 @@ export default function DashboardLayout({
           </ul>
         </nav>
 
-        {/* Pro Plan Banner */}
-        <AnimatePresence>
-          {sidebarOpen && (
-            <motion.div
-              className="p-4 m-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <p className="text-sm font-semibold mb-1">PRO PLAN</p>
-              <p className="text-xs mb-3 opacity-90">
-                Unlock all AI features and advanced tracking
-              </p>
-              <motion.button
-                className="w-full bg-white text-blue-600 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Upgrade Now
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+  
 
         {/* Toggle Sidebar Button */}
         <motion.button
@@ -141,7 +119,7 @@ export default function DashboardLayout({
           <div className="flex items-center justify-between">
             {/* Welcome Message */}
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Welcome back, Alex</h1>
+              <h1 className="text-2xl font-bold text-gray-800">Welcome back, {mockUser.name.split(' ')[0]}</h1>
               <p className="text-sm text-gray-500">
                 {mounted ? new Date().toLocaleDateString('en-US', {
                   weekday: 'long',
@@ -163,7 +141,7 @@ export default function DashboardLayout({
               {/* Profile */}
               <div className="flex items-center gap-3">
                 <img
-                  src="https://ui-avatars.com/api/?name=Alex+Smith&background=3b82f6&color=fff"
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(mockUser.name)}&background=3b82f6&color=fff`}
                   alt="Profile"
                   className="w-10 h-10 rounded-full"
                 />

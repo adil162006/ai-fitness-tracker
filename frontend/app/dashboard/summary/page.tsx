@@ -14,60 +14,97 @@ import {
   Moon,
   BarChart3
 } from 'lucide-react';
+import {
+  getLatestWeeklySummary,
+  mockWorkoutLogs,
+  mockWeeklySummaries,
+  getWeeklyActivityMap,
+  getWeeklyWorkoutCount,
+  mockUser,
+} from '@/lib/mockData';
 
 const WeeklySummaryPage = () => {
-  const weekRange = 'Oct 16 - Oct 22';
+  // ── EER-based data from weekly_summaries + workout_logs ────────────────
+  const latestSummary = getLatestWeeklySummary();
+  const weeklyActivity = getWeeklyActivityMap();
+  const workoutsCompleted = getWeeklyWorkoutCount();
+
+  // Format week range
+  const weekStart = new Date(latestSummary.week_start);
+  const weekEnd = new Date(latestSummary.week_end);
+  const weekRange = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+  // Derive stats
+  const targetWorkouts = mockUser.weekly_availability;
+  const consistencyScore = latestSummary.consistency_score;
+
+  // Compute streak from weekly_summaries
+  const activeStreak = mockWeeklySummaries.filter((s) => s.consistency_score >= 80).length;
+
+  // Total volume from this week's logs
+  const thisWeekLogs = mockWorkoutLogs.filter(
+    (log) => log.date >= latestSummary.week_start && log.date <= latestSummary.week_end
+  );
+  const totalVolume = thisWeekLogs.reduce((sum, log) => {
+    return sum + log.exercises.reduce((eSum, ex) => {
+      const weight = parseFloat(ex.weight) || 0;
+      const reps = typeof ex.reps === 'number' ? ex.reps : parseInt(String(ex.reps)) || 0;
+      return eSum + weight * reps * ex.sets;
+    }, 0);
+  }, 0);
 
   const stats = {
-    workoutsCompleted: { value: 5, target: 6 },
-    consistencyScore: { value: 92, change: '+2%' },
-    totalVolume: { value: '12,500', unit: 'lbs' },
-    activeStreak: { value: 3, unit: 'Weeks' }
+    workoutsCompleted: { value: workoutsCompleted, target: targetWorkouts },
+    consistencyScore: { value: consistencyScore, change: `+${consistencyScore > 85 ? (consistencyScore - 85) : 0}%` },
+    totalVolume: { value: Math.round(totalVolume).toLocaleString(), unit: 'kg' },
+    activeStreak: { value: activeStreak, unit: 'Weeks' }
   };
 
-  const dailyActivity = [
-    { day: 'MON', volume: 2800, hasWorkout: true },
-    { day: 'TUE', volume: 3200, hasWorkout: true },
-    { day: 'WED', volume: 0, hasWorkout: false },
-    { day: 'THU', volume: 2400, hasWorkout: true },
-    { day: 'FRI', volume: 2100, hasWorkout: true },
-    { day: 'SAT', volume: 2000, hasWorkout: true },
-    { day: 'SUN', volume: 0, hasWorkout: false }
-  ];
+  // Daily activity with volume from workout_logs
+  const dailyActivity = weeklyActivity.map((day) => ({
+    day: day.day,
+    volume: day.volume,
+    hasWorkout: day.hasWorkout,
+  }));
 
-  const maxVolume = Math.max(...dailyActivity.map(d => d.volume));
+  const maxVolume = Math.max(...dailyActivity.map((d) => d.volume), 1);
 
+  // AI analysis derived from weekly_summaries.summary_text
   const aiAnalysis = {
     wins: [
       {
         title: 'THE WIN',
-        message: "Your consistency on leg days has improved by 30%. You're maintaining a powerful level throughout the entire set.",
+        message: latestSummary.summary_text.split('.').slice(0, 2).join('.') + '.',
         icon: CheckCircle2,
-        color: 'green'
-      }
+        color: 'green',
+      },
     ],
     gaps: [
       {
         title: 'THE GAP',
-        message: "You missed your Thursday cardio session. Heart rate data suggests recovery was likely needed after Wednesday's intensity.",
+        message:
+          thisWeekLogs.some((l) => l.soreness_reported)
+            ? `Soreness was reported after ${thisWeekLogs.filter((l) => l.soreness_reported).length} session(s). Consider adding active recovery between high-intensity days.`
+            : 'No gaps detected this week — outstanding performance!',
         icon: AlertCircle,
-        color: 'orange'
-      }
+        color: 'orange',
+      },
     ],
     nextWeek: [
       {
-        title: 'NEXT WEEK & FOCUS',
-        message: 'Prioritize active recovery on Wednesday to maximize high intensity for Friday session.',
+        title: 'NEXT WEEK FOCUS',
+        message:
+          'Prioritize progressive overload on compound lifts while maintaining recovery between sessions. Target 5 sessions aligned with your weekly availability.',
         icon: Target,
-        color: 'blue'
-      }
-    ]
+        color: 'blue',
+      },
+    ],
   };
 
   const recoveryCorrelation = {
-    performance: 7.8,
-    sleepQuality: 8.2,
-    sleepScore: 84
+    performance: (consistencyScore / 10).toFixed(1),
+    sleepQuality: '7.8',
+    sleepScore: Math.round(consistencyScore * 0.9),
   };
 
   return (
@@ -117,7 +154,7 @@ const WeeklySummaryPage = () => {
             <div
               className="bg-blue-500 h-2 rounded-full transition-all"
               style={{
-                width: `${(stats.workoutsCompleted.value / stats.workoutsCompleted.target) * 100}%`
+                width: `${Math.min((stats.workoutsCompleted.value / stats.workoutsCompleted.target) * 100, 100)}%`
               }}
             ></div>
           </div>
@@ -167,15 +204,11 @@ const WeeklySummaryPage = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Daily Activity</h3>
-                <p className="text-sm text-gray-500">Volume (kg) vs Time (min)</p>
+                <p className="text-sm text-gray-500">Volume (estimated) per day</p>
               </div>
               <div className="flex items-center gap-2">
                 <button className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                   Volume
-                  <ChevronDown size={16} />
-                </button>
-                <button className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                  Oval
                   <ChevronDown size={16} />
                 </button>
               </div>
@@ -217,11 +250,11 @@ const WeeklySummaryPage = () => {
               {/* The Win */}
               {aiAnalysis.wins.map((item, index) => (
                 <div key={index} className="flex gap-4">
-                  <div className={`w-12 h-12 bg-${item.color}-100 rounded-xl flex items-center justify-center flex-shrink-0`}>
-                    <item.icon className={`text-${item.color}-600`} size={24} />
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <item.icon className="text-green-600" size={24} />
                   </div>
                   <div>
-                    <h4 className={`text-sm font-bold text-${item.color}-600 uppercase tracking-wide mb-2`}>
+                    <h4 className="text-sm font-bold text-green-600 uppercase tracking-wide mb-2">
                       {item.title}
                     </h4>
                     <p className="text-gray-700 leading-relaxed">{item.message}</p>
@@ -232,11 +265,11 @@ const WeeklySummaryPage = () => {
               {/* The Gap */}
               {aiAnalysis.gaps.map((item, index) => (
                 <div key={index} className="flex gap-4">
-                  <div className={`w-12 h-12 bg-${item.color}-100 rounded-xl flex items-center justify-center flex-shrink-0`}>
-                    <item.icon className={`text-${item.color}-600`} size={24} />
+                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <item.icon className="text-orange-600" size={24} />
                   </div>
                   <div>
-                    <h4 className={`text-sm font-bold text-${item.color}-600 uppercase tracking-wide mb-2`}>
+                    <h4 className="text-sm font-bold text-orange-600 uppercase tracking-wide mb-2">
                       {item.title}
                     </h4>
                     <p className="text-gray-700 leading-relaxed">{item.message}</p>
@@ -247,11 +280,11 @@ const WeeklySummaryPage = () => {
               {/* Next Week Focus */}
               {aiAnalysis.nextWeek.map((item, index) => (
                 <div key={index} className="flex gap-4">
-                  <div className={`w-12 h-12 bg-${item.color}-100 rounded-xl flex items-center justify-center flex-shrink-0`}>
-                    <item.icon className={`text-${item.color}-600`} size={24} />
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <item.icon className="text-blue-600" size={24} />
                   </div>
                   <div>
-                    <h4 className={`text-sm font-bold text-${item.color}-600 uppercase tracking-wide mb-2`}>
+                    <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-2">
                       {item.title}
                     </h4>
                     <p className="text-gray-700 leading-relaxed">{item.message}</p>
@@ -289,7 +322,7 @@ const WeeklySummaryPage = () => {
                   <span className="text-sm font-medium text-gray-700">Performance</span>
                 </div>
                 <span className="font-bold text-gray-800">
-                  {recoveryCorrelation.performance} avg/stop
+                  {recoveryCorrelation.performance}/10
                 </span>
               </div>
 
@@ -317,7 +350,7 @@ const WeeklySummaryPage = () => {
                 {recoveryCorrelation.sleepScore}/100
               </div>
               <div className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
-                OPTIMAL
+                {recoveryCorrelation.sleepScore >= 80 ? 'OPTIMAL' : 'GOOD'}
               </div>
             </div>
 
@@ -332,7 +365,7 @@ const WeeklySummaryPage = () => {
           <div className="bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl shadow-lg p-6 text-white">
             <h3 className="text-lg font-bold mb-2">Full Report Ready</h3>
             <p className="text-sm text-white/90 mb-4">
-              Includes authentic data and exercise history
+              Includes {thisWeekLogs.length} workout logs and AI analysis
             </p>
             <button className="w-full py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
               <Download size={18} />

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useGetMe, useUpdateUser } from '@/hooks/useUser';
 import { Toaster } from 'react-hot-toast';
+import { mockWorkoutLogs, getLatestWeeklySummary } from '@/lib/mockData';
 
 const ProfilePage = () => {
   const { user, isLoading: userLoading } = useGetMe();
@@ -73,8 +74,8 @@ const ProfilePage = () => {
   }
 
   const stats = {
-    totalWorkouts: 124,
-    consistencyScore: 94
+    totalWorkouts: mockWorkoutLogs.length,
+    consistencyScore: getLatestWeeklySummary().consistency_score
   };
 
   const securitySettings = [

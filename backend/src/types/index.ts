@@ -58,3 +58,20 @@ export interface UpdateProfileForm{
   experienceLevel: ExperienceLevel;
   weeklyAvailability: WeeklyAvailability;
 }
+export interface User{
+  fullName: string;
+  age:number;
+  height:number;
+  weight: number;
+  fitnessGoal: FitnessGoal;
+  experienceLevel: ExperienceLevel;
+  weeklyAvailability: WeeklyAvailability;
+}
+
+// AI-generated workout plan shape
+export interface WorkoutPlan {
+  exercises: Array<Record<string, any>>;
+  difficulty: string;
+  explanation: string;
+  source?: string;
+}

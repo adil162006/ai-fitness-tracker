@@ -145,7 +145,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 text-center flex flex-col items-center">
           <ScrollReveal>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold mb-8 tracking-wide">
-              <Cpu className="w-4 h-4" /> Powered by Advanced GPT-4o
+              <Cpu className="w-4 h-4" /> Powered by Advanced Gemini
             </div>
           </ScrollReveal>
 

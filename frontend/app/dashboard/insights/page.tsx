@@ -12,53 +12,102 @@ import {
   Zap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { mockAiInsights, mockWorkoutLogs, getLatestWeeklySummary } from '@/lib/mockData';
+
+// Map ai_insights.type → icon, colors
+const insightConfig: Record<string, {
+  icon: React.ComponentType<{ className?: string; size?: number }>;
+  iconColor: string;
+  bgColor: string;
+}> = {
+  consistency: {
+    icon: CheckCircle2,
+    iconColor: 'text-green-600',
+    bgColor: 'bg-green-50',
+  },
+  fatigue: {
+    icon: AlertTriangle,
+    iconColor: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+  },
+  recovery: {
+    icon: Activity,
+    iconColor: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+  },
+  motivation: {
+    icon: Zap,
+    iconColor: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+  },
+  performance: {
+    icon: TrendingUp,
+    iconColor: 'text-green-600',
+    bgColor: 'bg-green-50',
+  },
+};
 
 const InsightsPage = () => {
-  const recoveryScore = 92;
-  const recoveryStatus = 'High';
-  const recoveryColor = 'blue';
+  // ── EER-based data ─────────────────────────────────────────────────────
+  const latestSummary = getLatestWeeklySummary();
+  const recoveryScore = latestSummary.consistency_score;
+  const recoveryStatus = recoveryScore >= 90 ? 'High' : recoveryScore >= 70 ? 'Medium' : 'Low';
+
+  // Growth trends derived from workout_logs
+  const recentLogs = mockWorkoutLogs.slice(0, 3);
+  const olderLogs = mockWorkoutLogs.slice(3);
+
+  const recentVolume = recentLogs.reduce((sum, l) => sum + l.duration_minutes, 0);
+  const olderVolume = olderLogs.reduce((sum, l) => sum + l.duration_minutes, 0) || 1;
+  const volumeChange = Math.round(((recentVolume - olderVolume) / olderVolume) * 100);
 
   const growthTrends = [
-    { label: 'Volume Lifted', value: '+28%', color: 'blue' },
-    { label: 'Sleep Quality', value: '+12%', color: 'green' },
-    { label: 'Resting HRV', value: '-2%', color: 'red' }
+    {
+      label: 'Volume Lifted',
+      value: `${volumeChange >= 0 ? '+' : ''}${volumeChange}%`,
+      color: volumeChange >= 0 ? 'blue' : 'red',
+    },
+    {
+      label: 'Consistency',
+      value: `${latestSummary.consistency_score}%`,
+      color: 'green',
+    },
+    {
+      label: 'Avg Duration',
+      value: `${Math.round(recentLogs.reduce((s, l) => s + l.duration_minutes, 0) / (recentLogs.length || 1))} min`,
+      color: 'blue',
+    },
   ];
 
-  const insights = [
-    {
-      type: 'CONSISTENCY',
-      icon: CheckCircle2,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-50',
-      time: '2d ago',
-      title: 'Consistency Achievement',
-      message: "You've hit your goals for 12 days straight! Your morning workouts seem to be more effective, showing a 15% higher intensity on average."
-    },
-    {
-      type: 'MILD FATIGUE',
-      icon: AlertTriangle,
-      iconColor: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      time: '4h ago',
-      title: 'Mild Fatigue Detected',
-      message: 'Late-night screen time has impacted your sleep latency by 22 minutes. AI suggests shifting your wind-down routine 30 minutes earlier to maintain recovery.'
-    },
-    {
-      type: 'MOTIVATION',
-      icon: Zap,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      time: 'Yesterday',
-      title: 'Motivation Boost',
-      message: "You are only 3 sessions away from achieving your 'Iron Month' badge. Your volume in bench press has increased by 10kg over the last 30 days."
-    }
-  ];
+  // Map ai_insights to display format
+  const insights = mockAiInsights.map((insight) => {
+    const config = insightConfig[insight.type] || insightConfig.performance;
+    const dateObj = new Date(insight.created_at);
+    const now = new Date();
+    const diffHours = Math.round((now.getTime() - dateObj.getTime()) / (1000 * 60 * 60));
+    const timeAgo =
+      diffHours < 24
+        ? `${diffHours}h ago`
+        : diffHours < 48
+          ? 'Yesterday'
+          : `${Math.round(diffHours / 24)}d ago`;
+
+    return {
+      type: insight.type.toUpperCase(),
+      icon: config.icon,
+      iconColor: config.iconColor,
+      bgColor: config.bgColor,
+      time: timeAgo,
+      title: insight.type.charAt(0).toUpperCase() + insight.type.slice(1) + ' Insight',
+      message: insight.content,
+    };
+  });
 
   const customizeMetrics = [
     'Sleep Quality',
     'Resting HRV',
     'Training Volume',
-    'Recovery Time'
+    'Recovery Time',
   ];
 
   const containerVariants = {
@@ -66,9 +115,9 @@ const InsightsPage = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -76,8 +125,8 @@ const InsightsPage = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5 }
-    }
+      transition: { duration: 0.5 },
+    },
   };
 
   return (
@@ -143,8 +192,10 @@ const InsightsPage = () => {
                     className="text-blue-500"
                     strokeLinecap="round"
                     initial={{ strokeDashoffset: 2 * Math.PI * 70 }}
-                    animate={{ strokeDashoffset: 2 * Math.PI * 70 * (1 - recoveryScore / 100) }}
-                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
+                    animate={{
+                      strokeDashoffset: 2 * Math.PI * 70 * (1 - recoveryScore / 100),
+                    }}
+                    transition={{ duration: 1.5, ease: 'easeOut', delay: 0.3 }}
                   />
                 </svg>
                 <motion.div
@@ -166,8 +217,8 @@ const InsightsPage = () => {
                   Recovery Status: {recoveryStatus}
                 </h2>
                 <p className="text-gray-600 mb-4 leading-relaxed">
-                  You&apos;re in excellent condition for a strength session today. Your HRV and sleep
-                  quality correlate with high explosive readiness.
+                  Based on your {mockWorkoutLogs.length} logged sessions and consistency score,
+                  you&apos;re in excellent condition for a strength session today.
                 </p>
                 <div className="flex gap-3">
                   <motion.button
@@ -196,7 +247,7 @@ const InsightsPage = () => {
                 <TrendingUp className="text-blue-500" size={20} />
                 <h3 className="text-lg font-bold text-gray-800">Growth Trends</h3>
               </div>
-              <span className="text-sm text-gray-500">90 DAYS</span>
+              <span className="text-sm text-gray-500">RECENT vs OLDER</span>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -207,16 +258,17 @@ const InsightsPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 + 0.5 }}
-                  whileHover={{ scale: 1.05, backgroundColor: "rgba(243,244,246,1)" }}
+                  whileHover={{ scale: 1.05, backgroundColor: 'rgba(243,244,246,1)' }}
                 >
                   <p className="text-sm text-gray-600 mb-2">{trend.label}</p>
                   <p
-                    className={`text-2xl font-bold ${trend.color === 'blue'
+                    className={`text-2xl font-bold ${
+                      trend.color === 'blue'
                         ? 'text-blue-600'
                         : trend.color === 'green'
                           ? 'text-green-600'
                           : 'text-red-600'
-                      }`}
+                    }`}
                   >
                     {trend.value}
                   </p>
@@ -231,8 +283,11 @@ const InsightsPage = () => {
               transition={{ delay: 0.8 }}
             >
               <p className="text-sm text-blue-700">
-                <span className="font-semibold">Your strength volume has increased by 10%</span>{' '}
-                compared to last week. Keep maintaining this progressive overload!
+                <span className="font-semibold">
+                  Your training volume has {volumeChange >= 0 ? 'increased' : 'decreased'} by{' '}
+                  {Math.abs(volumeChange)}%
+                </span>{' '}
+                compared to previous sessions. Keep maintaining this progressive overload!
               </p>
             </motion.div>
           </motion.div>
@@ -267,7 +322,9 @@ const InsightsPage = () => {
                   whileHover={{ x: 4 }}
                 >
                   <div className="flex gap-4">
-                    <div className={`w-12 h-12 ${insight.bgColor} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                    <div
+                      className={`w-12 h-12 ${insight.bgColor} rounded-xl flex items-center justify-center flex-shrink-0`}
+                    >
                       <insight.icon className={insight.iconColor} size={24} />
                     </div>
 

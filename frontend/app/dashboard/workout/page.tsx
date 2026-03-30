@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dumbbell, ChevronRight, Zap, Play, Calendar, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getTodaysPlan } from '@/lib/mockData';
 
 export default function WorkoutPage() {
   const [todaysDate, setTodaysDate] = useState<string>('');
@@ -15,56 +16,23 @@ export default function WorkoutPage() {
     }));
   }, []);
 
-  const workoutType = "Push Day Focus";
+  // ── EER-based data from workout_plans ──────────────────────────────────
+  const plan = getTodaysPlan();
 
   const todaysPlan = {
     date: todaysDate,
-    type: workoutType,
-    difficulty: "Intermediate",
-    estimatedTime: "45-60 min",
-    exercises: [
-      {
-        name: 'Barbell Squats',
-        sets: 3,
-        reps: 10,
-        weight: '185 lbs',
-        restTime: '90 sec',
-        notes: 'Focus on depth and controlled descent'
-      },
-      {
-        name: 'Bulgarian Split Squats',
-        sets: 3,
-        reps: '8/leg',
-        weight: '50 lbs',
-        restTime: '60 sec',
-        notes: 'Keep torso upright, control the movement'
-      },
-      {
-        name: 'Deadlifts',
-        sets: 3,
-        reps: 8,
-        weight: '225 lbs',
-        restTime: '120 sec',
-        notes: 'Maintain neutral spine throughout'
-      },
-      {
-        name: 'Leg Press',
-        sets: 3,
-        reps: 12,
-        weight: '300 lbs',
-        restTime: '60 sec',
-        notes: 'Full range of motion, no lockout'
-      },
-      {
-        name: 'Planks',
-        sets: 3,
-        reps: '60 sec',
-        weight: 'Bodyweight',
-        restTime: '45 sec',
-        notes: 'Keep core tight, no sagging'
-      }
-    ],
-    aiExplanation: "Today's workout targets your lower body with a focus on compound movements. Your recovery metrics show you're ready for heavier loads. The progressive overload on squats will help break through your current plateau."
+    type: plan
+      ? plan.difficulty.charAt(0).toUpperCase() + plan.difficulty.slice(1) + ' Push Day'
+      : 'Rest Day',
+    difficulty: plan?.difficulty
+      ? plan.difficulty.charAt(0).toUpperCase() + plan.difficulty.slice(1)
+      : 'N/A',
+    estimatedTime: plan
+      ? `${Math.round(plan.exercises.length * 8)}-${Math.round(plan.exercises.length * 12)} min`
+      : '0 min',
+    exercises: plan?.exercises || [],
+    aiExplanation: plan?.explanation || 'No workout planned for today. Consider active recovery.',
+    source: plan?.source || 'none',
   };
 
   const containerVariants = {
@@ -127,7 +95,7 @@ export default function WorkoutPage() {
       >
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold mb-2">{workoutType}</h2>
+            <h2 className="text-2xl font-bold mb-2">{todaysPlan.type}</h2>
             <div className="flex items-center gap-4 text-blue-100">
               <span className="flex items-center gap-1">
                 <Dumbbell size={16} />
@@ -161,6 +129,13 @@ export default function WorkoutPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Source badge */}
+        {todaysPlan.source === 'ai-generated' && (
+          <div className="mt-3 inline-flex items-center gap-1 px-2 py-1 bg-white/10 rounded-lg text-xs text-blue-100">
+            <Zap size={12} /> AI-Generated Plan
+          </div>
+        )}
       </motion.div>
 
       {/* Exercise List */}
@@ -214,7 +189,7 @@ export default function WorkoutPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Rest</p>
-                        <p className="font-semibold text-gray-800">{exercise.restTime}</p>
+                        <p className="font-semibold text-gray-800">{exercise.rest_time}</p>
                       </div>
                     </div>
 

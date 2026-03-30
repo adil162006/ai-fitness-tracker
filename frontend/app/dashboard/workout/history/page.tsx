@@ -11,71 +11,97 @@ import {
   ChevronRight,
   Flame
 } from 'lucide-react';
+import { mockWorkoutLogs, mockAiInsights } from '@/lib/mockData';
 
 const WorkoutHistoryPage = () => {
+  // ── EER-based data from workout_logs ───────────────────────────────────
+  const totalWorkouts = mockWorkoutLogs.length;
+
+  // Average intensity
+  const highIntensityCount = mockWorkoutLogs.filter((l) => l.intensity === 'high').length;
+  const avgIntensityPercent = Math.round((highIntensityCount / totalWorkouts) * 100);
+
+  // Active streak (consecutive days with logs)
+  const sortedDates = mockWorkoutLogs
+    .map((l) => l.date)
+    .sort()
+    .reverse();
+  let activeStreak = 1;
+  for (let i = 0; i < sortedDates.length - 1; i++) {
+    const current = new Date(sortedDates[i]);
+    const prev = new Date(sortedDates[i + 1]);
+    const diffDays = Math.round((current.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 2) {
+      activeStreak++;
+    } else {
+      break;
+    }
+  }
+
   const stats = {
-    totalWorkouts: 48,
-    avgIntensity: '85%',
-    activeStreak: 12,
-    streakLabel: 'Days'
+    totalWorkouts,
+    avgIntensity: `${avgIntensityPercent}%`,
+    activeStreak,
+    streakLabel: 'Days',
   };
 
-  const workoutHistory = [
-    {
-      date: 'Oct 24, 2023',
-      day: 'Thursday',
-      time: '7:30 AM',
-      title: 'Morning Strength Session',
-      exercises: 'Bench Press (5x5), Squats (3x10), Pull-ups (3x10)',
-      intensity: 'HIGH INTENSITY',
-      intensityColor: 'red',
-      duration: '52 min',
-      aiInsight: 'Strength increased by 7% compared to last session',
-      badge: 'PR'
-    },
-    {
-      date: 'Oct 22, 2023',
-      day: 'Tuesday',
-      time: '5:30 PM',
-      title: 'Lower Body & Core',
-      exercises: 'Deadlifts (5x5), Leg Press (3x10), Planks (3x60s)',
-      intensity: 'MEDIUM INTENSITY',
-      intensityColor: 'orange',
-      duration: '48 min',
-      aiInsight: 'Form has improved throughout the session',
-      badge: null
-    },
-    {
-      date: 'Oct 20, 2023',
-      day: 'Sunday',
-      time: '9:00 AM',
-      title: 'Upper Body Focus',
-      exercises: 'Overhead Press (4x8), Dips (3x12), Rows (4x10)',
-      intensity: 'HIGH INTENSITY',
-      intensityColor: 'red',
-      duration: '45 min',
-      aiInsight: 'Excellent recovery - ready for next session',
-      badge: null
-    },
-    {
-      date: 'Oct 18, 2023',
-      day: 'Friday',
-      time: '6:15 PM',
-      title: 'Full Body Circuit',
-      exercises: 'Squats (3x12), Push-ups (3x15), Lunges (3x10/leg)',
-      intensity: 'MEDIUM INTENSITY',
-      intensityColor: 'orange',
-      duration: '40 min',
-      aiInsight: 'Consistent performance across all sets',
-      badge: null
-    }
-  ];
+  // Map workout_logs to history cards
+  const workoutHistory = mockWorkoutLogs.map((log) => {
+    const dateObj = new Date(log.date);
+    const createdObj = new Date(log.created_at);
+
+    // Find a matching AI insight for this date
+    const relatedInsight = mockAiInsights.find(
+      (ai) => ai.generated_for_date === log.date || ai.generated_for_date === log.date
+    );
+
+    return {
+      date: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      day: dateObj.toLocaleDateString('en-US', { weekday: 'long' }),
+      time: createdObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+      title: `${log.exercises[0]?.name || 'Workout'} Session`,
+      exercises: log.exercises.map((ex) => `${ex.name} (${ex.sets}x${ex.reps})`).join(', '),
+      intensity: log.intensity === 'high' ? 'HIGH INTENSITY' : 'MEDIUM INTENSITY',
+      intensityColor: log.intensity === 'high' ? 'red' : 'orange',
+      duration: `${log.duration_minutes} min`,
+      aiInsight: relatedInsight?.content?.substring(0, 60) + '…' || (log.soreness_reported
+        ? 'Soreness reported — recovery recommended'
+        : 'Solid session — performance on track'),
+      badge: log.soreness_reported && log.intensity === 'high' ? 'PR' : null,
+      notes: log.notes,
+    };
+  });
+
+  // Strength progress from workout_logs exercises
+  const pushExercises = ['Bench Press', 'Barbell Bench Press', 'Incline Dumbbell Press', 'Overhead Press', 'Dips', 'Tricep Dips', 'Cable Flyes'];
+  const pullExercises = ['Pull-ups', 'Barbell Rows', 'Seated Cable Row', 'Face Pulls', 'Barbell Curls'];
+  const legExercises = ['Barbell Squats', 'Romanian Deadlifts', 'Bulgarian Split Squats', 'Leg Press', 'Standing Calf Raises', 'Deadlifts', 'Lunges'];
+
+  const countCategory = (names: string[]) => {
+    let total = 0;
+    mockWorkoutLogs.forEach((log) => {
+      log.exercises.forEach((ex) => {
+        if (names.some((n) => ex.name.includes(n) || n.includes(ex.name))) {
+          total++;
+        }
+      });
+    });
+    return total;
+  };
+
+  const pushCount = countCategory(pushExercises);
+  const pullCount = countCategory(pullExercises);
+  const legCount = countCategory(legExercises);
+  const totalExCount = pushCount + pullCount + legCount || 1;
 
   const progressCharts = [
-    { label: 'Push', value: 65, color: 'bg-blue-500' },
-    { label: 'Pull', value: 50, color: 'bg-purple-500' },
-    { label: 'Legs', value: 25, color: 'bg-green-500' }
+    { label: 'Push', value: Math.round((pushCount / totalExCount) * 100), color: 'bg-blue-500' },
+    { label: 'Pull', value: Math.round((pullCount / totalExCount) * 100), color: 'bg-purple-500' },
+    { label: 'Legs', value: Math.round((legCount / totalExCount) * 100), color: 'bg-green-500' },
   ];
+
+  // AI Coach tip from latest insight
+  const latestInsight = mockAiInsights[mockAiInsights.length - 1];
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -96,7 +122,7 @@ const WorkoutHistoryPage = () => {
           </div>
           <div className="mt-3">
             <span className="text-3xl font-bold text-gray-800">{stats.totalWorkouts}</span>
-            <span className="text-sm text-green-600 ml-2">+6 this month</span>
+            <span className="text-sm text-green-600 ml-2">logged</span>
           </div>
         </div>
 
@@ -109,7 +135,7 @@ const WorkoutHistoryPage = () => {
           </div>
           <div className="mt-3">
             <span className="text-3xl font-bold text-gray-800">{stats.avgIntensity}</span>
-            <span className="text-sm text-gray-500 ml-2">Optimized for growth</span>
+            <span className="text-sm text-gray-500 ml-2">high intensity</span>
           </div>
         </div>
 
@@ -142,10 +168,10 @@ const WorkoutHistoryPage = () => {
             </div>
             <div className="flex items-center gap-3 mt-4">
               <button className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium">
-                Last 30 Days
+                All Sessions
               </button>
               <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-                Last 90 Days
+                High Intensity
               </button>
             </div>
           </div>
@@ -190,6 +216,10 @@ const WorkoutHistoryPage = () => {
 
               <p className="text-sm text-gray-600 mb-4">{workout.exercises}</p>
 
+              {workout.notes && (
+                <p className="text-xs text-gray-500 italic mb-3">&quot;{workout.notes}&quot;</p>
+              )}
+
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   <span className="font-medium">{workout.duration}</span>
@@ -217,9 +247,6 @@ const WorkoutHistoryPage = () => {
                 <button className="w-10 h-10 hover:bg-gray-100 rounded-lg font-medium">
                   2
                 </button>
-                <button className="w-10 h-10 hover:bg-gray-100 rounded-lg font-medium">
-                  3
-                </button>
               </div>
 
               <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
@@ -236,7 +263,7 @@ const WorkoutHistoryPage = () => {
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <div className="flex items-center gap-2 mb-6">
               <BarChart3 className="text-blue-500" size={20} />
-              <h3 className="font-bold text-gray-800">Strength Progress</h3>
+              <h3 className="font-bold text-gray-800">Volume Distribution</h3>
             </div>
 
             <div className="space-y-6">
@@ -257,45 +284,8 @@ const WorkoutHistoryPage = () => {
             </div>
 
             <p className="text-xs text-gray-500 mt-4">
-              Your strength volume has increased by 10% compared to last week
+              Based on {totalWorkouts} logged workout sessions
             </p>
-          </div>
-
-          {/* Volume Distribution */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h3 className="font-bold text-gray-800 mb-4">Volume Distribution</h3>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Push</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: '65%' }}></div>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-800 w-10">65%</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Pull</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div className="bg-purple-500 h-2 rounded-full" style={{ width: '50%' }}></div>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-800 w-10">50%</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Legs</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '25%' }}></div>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-800 w-10">25%</span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* AI Coach Tip */}
@@ -307,7 +297,7 @@ const WorkoutHistoryPage = () => {
               <div>
                 <h4 className="font-semibold text-blue-900 mb-2">AI Coach Tip!</h4>
                 <p className="text-sm text-blue-700 leading-relaxed">
-                  You haven&apos;t hit Legs in 4 days. Tomorrow is a great time to focus on Squats to maintain your overall balance.
+                  {latestInsight?.content || 'Keep your training consistent to see best results!'}
                 </p>
               </div>
             </div>

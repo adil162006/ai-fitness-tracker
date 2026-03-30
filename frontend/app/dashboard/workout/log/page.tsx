@@ -11,6 +11,7 @@ import {
   History,
   Mic
 } from 'lucide-react';
+import { getTodaysPlan, getWeeklyWorkoutCount, mockWorkoutLogs } from '@/lib/mockData';
 
 interface Exercise {
   name: string;
@@ -23,7 +24,7 @@ interface Exercise {
 export default function WorkoutLogPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [exercises, setExercises] = useState<Exercise[]>([
-    { name: 'Bench Press', sets: 3, reps: 10, weight: 185, intensity: 'Medium' }
+    { name: 'Bench Press', sets: 3, reps: 10, weight: 80, intensity: 'Medium' }
   ]);
   const [mounted, setMounted] = useState(false);
 
@@ -31,18 +32,26 @@ export default function WorkoutLogPage() {
     setMounted(true);
   }, []);
 
+  // ── EER-based data ─────────────────────────────────────────────────────
+  const plan = getTodaysPlan();
+
   const todaysPlan = {
     date: mounted ? new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
-    exercises: [
-      { name: 'Barbell Squats', sets: '3 sets x 10 reps', weight: '185lbs' },
-      { name: 'Deadlifts', sets: '3 sets x 8 reps', weight: '225lbs' },
-      { name: 'Bulgarian Split Squats', sets: '3 sets x 8/leg', weight: '50lbs' },
-    ]
+    exercises: plan?.exercises.map((ex) => ({
+      name: ex.name,
+      sets: `${ex.sets} sets x ${ex.reps} reps`,
+      weight: ex.weight,
+    })) || [],
   };
 
+  // Quick stats derived from workout_logs
+  const weeklyCount = getWeeklyWorkoutCount();
+  const recentLog = mockWorkoutLogs[0];
+  const estimatedCalories = recentLog ? recentLog.duration_minutes * 8 : 0;
+
   const quickStats = {
-    weeklyStreak: '5 Days',
-    caloriesBurned: '342 est'
+    weeklyStreak: `${weeklyCount} Days`,
+    caloriesBurned: `${estimatedCalories} est`,
   };
 
   const addExercise = () => {
