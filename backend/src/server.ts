@@ -5,6 +5,10 @@ import cookieParser from 'cookie-parser';
 import { Router } from "express";
 import authRoutes from './routes/auth.routes'
 import userRoutes from './routes/user.route'
+import aiRoutes from './routes/ai.routes'
+import dashboardRoutes from './routes/dashboard.routes'
+import insightsRoutes from './routes/insights.routes'
+import workoutLogRoutes from './routes/workoutLog.route'
 
 const router = Router();
 const app =express();
@@ -22,7 +26,11 @@ app.use(cookieParser());
 
 app.use(express.json()); // parses incoming JSON request bodies and makes them available as req.body in your route handlers
 app.use("/api/auth", authRoutes);
-app.use("/api/user",userRoutes)
+app.use("/api/user", userRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/insights", insightsRoutes);
+app.use("/api/workouts", workoutLogRoutes);
 app.get("/health", (req:Request, res:Response) => {
   res.json({ status: "ok", message: "Server is running" });
 });
