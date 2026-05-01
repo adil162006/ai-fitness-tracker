@@ -13,10 +13,13 @@ import {
   Menu,
   Bell,
   LogOut,
-  History
+  History,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { mockUser } from '@/lib/mockData';
+import { useAuthStore } from '@/store/authStore';
+import { useGetMe } from '@/hooks/useUser';
+import { useLogout } from '@/hooks/useAuth';
 
 export default function DashboardLayout({
   children,
@@ -27,9 +30,27 @@ export default function DashboardLayout({
   const [mounted, setMounted] = React.useState(false);
   const pathname = usePathname();
 
+  const { user, isLoading: userLoading } = useGetMe();
+  const storeUser = useAuthStore((s) => s.user);
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+
+  // Use the fetched user name, fallback to Zustand store user
+  const displayName = user?.name || storeUser?.name || storeUser?.email || 'User';
+
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Update Zustand user data when useGetMe resolves (keeps store in sync)
+  React.useEffect(() => {
+    if (user && storeUser) {
+      useAuthStore.getState().setUser({
+        ...storeUser,
+        name: user.name,
+        profile_completed: user.profile_completed,
+      });
+    }
+  }, [user]);
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -121,7 +142,9 @@ export default function DashboardLayout({
           <div className="flex items-center justify-between">
             {/* Welcome Message */}
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Welcome back, {mockUser.name.split(' ')[0]}</h1>
+              <h1 className="text-2xl font-bold text-gray-800">
+                Welcome back, {displayName.split(' ')[0]}
+              </h1>
               <p className="text-sm text-gray-500">
                 {mounted ? new Date().toLocaleDateString('en-US', {
                   weekday: 'long',
@@ -143,15 +166,23 @@ export default function DashboardLayout({
               {/* Profile */}
               <div className="flex items-center gap-3">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(mockUser.name)}&background=3b82f6&color=fff`}
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3b82f6&color=fff`}
                   alt="Profile"
                   className="w-10 h-10 rounded-full"
                 />
               </div>
 
               {/* Logout */}
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <LogOut size={20} className="text-gray-600" />
+              <button
+                onClick={() => logout()}
+                disabled={isLoggingOut}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {isLoggingOut ? (
+                  <Loader2 size={20} className="text-gray-600 animate-spin" />
+                ) : (
+                  <LogOut size={20} className="text-gray-600" />
+                )}
               </button>
             </div>
           </div>

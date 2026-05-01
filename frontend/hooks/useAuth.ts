@@ -1,6 +1,7 @@
 "use client";
 import { authApi } from "@/api/authApi";
-import { useMutation } from "@tanstack/react-query";
+import { useAuthStore } from "@/store/authStore";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
@@ -24,12 +25,14 @@ interface LoginResponse {
     email: string;
     profile_completed: boolean;
   };
+  token: string | null;
 }
 
 interface SignupResponse {
   success: boolean;
   message: string;
   user: unknown;
+  token: string | null;
 }
 
 /**
@@ -56,6 +59,14 @@ export const useSignup = () => {
     mutationFn: (data: SignupData) => authApi.signup(data),
 
     onSuccess: (response: SignupResponse) => {
+      // Store token in Zustand if available
+      if (response.token) {
+        useAuthStore.getState().setAuth(response.token, {
+          id: (response.user as { id: string }).id,
+          email: (response.user as { email: string }).email,
+        });
+      }
+
       toast.success(
         response.message || "Signup successful! Please login to continue.",
         {
@@ -87,6 +98,15 @@ export const useLogin = () => {
     mutationFn: (data: LoginData) => authApi.login(data),
 
     onSuccess: (response: LoginResponse) => {
+      // Store token + user in Zustand
+      if (response.token) {
+        useAuthStore.getState().setAuth(response.token, {
+          id: response.user.id,
+          email: response.user.email,
+          profile_completed: response.user.profile_completed,
+        });
+      }
+
       toast.success(response.message || "Login successful!", {
         duration: 3000,
         position: "top-center",
@@ -117,6 +137,7 @@ export const useLogin = () => {
 
 export const useLogout = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ["logout"],
@@ -128,8 +149,11 @@ export const useLogout = () => {
         position: "top-center",
       });
 
-      // Clear any local storage
-      localStorage.clear();
+      // Clear Zustand auth state
+      useAuthStore.getState().clearAuth();
+
+      // Clear all cached queries
+      queryClient.clear();
 
       // Redirect to login page
       setTimeout(() => {
@@ -138,6 +162,10 @@ export const useLogout = () => {
     },
 
     onError: (error: unknown) => {
+      // Even on error, clear local state
+      useAuthStore.getState().clearAuth();
+      queryClient.clear();
+
       toast.error(getErrorMessage(error), {
         duration: 4000,
         position: "top-center",

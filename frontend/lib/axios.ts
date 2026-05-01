@@ -1,29 +1,25 @@
 // lib/axios.ts
 import axios from 'axios';
+import { useAuthStore } from '@/store/authStore';
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Important: sends cookies with requests
+  withCredentials: true,
 });
 
-// Request interceptor
+// Request interceptor — attach Bearer token from Zustand
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Get token from cookie or localStorage if needed
-    // For cookie-based auth, browser handles this automatically with withCredentials
-    
-    // Optional: Add token from localStorage as fallback
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Log request in development
     if (process.env.NODE_ENV === 'development') {
       console.log('📤 Request:', config.method?.toUpperCase(), config.url);
     }
@@ -36,31 +32,26 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Response interceptor — handle 401 by clearing Zustand and redirecting
 axiosInstance.interceptors.response.use(
   (response) => {
-    // Log response in development
     if (process.env.NODE_ENV === 'development') {
       console.log('📥 Response:', response.config.url, response.status);
     }
-
     return response;
   },
   (error) => {
-    // Handle different error types
     if (error.response) {
-      // Server responded with error status
       const { status, data } = error.response;
 
       switch (status) {
         case 401:
-          // Unauthorized - redirect to login
-          console.error('🔒 Unauthorized - Redirecting to login');
+          console.error('🔒 Unauthorized - Clearing session and redirecting');
+          // Clear Zustand store
+          useAuthStore.getState().clearAuth();
+          // Redirect to login
           if (typeof window !== 'undefined') {
-            // Clear any stored tokens
-            localStorage.removeItem('access_token');
-            // Redirect to login
-            window.location.href = '/login';
+            window.location.href = '/auth/login';
           }
           break;
 
@@ -80,14 +71,12 @@ axiosInstance.interceptors.response.use(
           console.error(`❌ Error ${status}:`, data?.message || 'Unknown error');
       }
 
-      // Return structured error
       return Promise.reject({
         status,
         message: data?.message || 'An error occurred',
         data: data,
       });
     } else if (error.request) {
-      // Request made but no response received
       console.error('📡 Network Error - No response received');
       return Promise.reject({
         status: 0,
@@ -95,7 +84,6 @@ axiosInstance.interceptors.response.use(
         data: null,
       });
     } else {
-      // Error setting up request
       console.error('⚙️ Request Setup Error:', error.message);
       return Promise.reject({
         status: -1,
@@ -106,4 +94,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export default axiosInstance;   
+export default axiosInstance;

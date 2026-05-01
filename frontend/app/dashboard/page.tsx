@@ -10,18 +10,11 @@ import {
   ChevronRight,
   Zap,
   Target,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import {
-  getTodaysPlan,
-  getThisWeekLogs,
-  getWeeklyDurationHours,
-  getWeeklyActivityMap,
-  mockAiInsights,
-  mockMeals,
-  mockUser,
-} from '@/lib/mockData';
+import { useDashboard } from '@/hooks/useDashboard';
 
 // Animated counter component
 const AnimatedNumber: React.FC<{ value: number; duration?: number }> = ({ value, duration = 2 }) => {
@@ -48,54 +41,54 @@ const AnimatedNumber: React.FC<{ value: number; duration?: number }> = ({ value,
 };
 
 export default function DashboardPage() {
-  // ── EER-based data ─────────────────────────────────────────────────────
-  const todaysPlan = getTodaysPlan();
-  const thisWeekLogs = getThisWeekLogs();
-  const weeklyDurationHours = getWeeklyDurationHours();
-  const weeklyActivity = getWeeklyActivityMap();
+  const { data: response, isLoading, isError } = useDashboard();
 
-  // Derive stats from workout_logs
-  const weeklyCalories = thisWeekLogs.reduce(
-    (sum, log) => sum + log.duration_minutes * 8, // rough kcal estimate
-    0
-  );
-  const totalVolumeKg = thisWeekLogs.reduce((sum, log) => {
+  if (isLoading) {
     return (
-      sum +
-      log.exercises.reduce((eSum, ex) => {
-        const weight = parseFloat(ex.weight) || 0;
-        const reps = typeof ex.reps === 'number' ? ex.reps : parseInt(String(ex.reps)) || 0;
-        return eSum + weight * reps * ex.sets;
-      }, 0)
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
     );
-  }, 0);
+  }
 
-  // AI coach tip from the latest ai_insight
-  const latestInsight = mockAiInsights[mockAiInsights.length - 1];
-  const aiCoachTip = latestInsight?.content || '';
+  if (isError || !response?.data) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-gray-500 text-lg">Failed to load dashboard data.</p>
+          <p className="text-gray-400 text-sm mt-1">Please try refreshing the page.</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Nutrition from latest meal
-  const latestMeal = mockMeals[0];
-  const proteinMatch = latestMeal?.ai_feedback?.match(/~(\d+)g protein/);
-  const proteinCurrent = proteinMatch ? parseInt(proteinMatch[1]) : 0;
-  const proteinTarget = Math.round(mockUser.weight_kg * 2.2); // 2.2g/kg target
+  const dashData = response.data;
+  const todaysPlan = dashData.todayPlan;
+  const stats = dashData.weeklyStats;
+  const weeklyActivity = dashData.weeklyActivityMap || [];
+  const coachTip = dashData.coachTip || '';
+  const nutrition = dashData.nutrition || {};
+
+  const isRestDay = !todaysPlan || todaysPlan.is_rest_day;
+  const exercises = todaysPlan?.exercises || [];
+  const difficulty = todaysPlan?.difficulty || 'medium';
 
   const weeklyStats = [
     {
       label: 'Weekly Calories',
-      value: weeklyCalories.toLocaleString(),
+      value: (stats?.calories || 0).toLocaleString(),
       unit: 'kcal',
       icon: Flame,
     },
     {
       label: 'Time Spent',
-      value: String(weeklyDurationHours),
+      value: String(stats?.durationHours || 0),
       unit: 'hours',
       icon: Clock,
     },
     {
       label: 'Volume Moved',
-      value: (totalVolumeKg / 1000).toFixed(1),
+      value: String(stats?.volumeTons || 0),
       unit: 'tons',
       icon: TrendingUp,
     },
@@ -138,11 +131,9 @@ export default function DashboardPage() {
             <div>
               <h2 className="text-xl font-bold text-gray-800">Today&apos;s Plan</h2>
               <p className="text-sm text-gray-500">
-                {todaysPlan && 'is_rest_day' in todaysPlan && todaysPlan.is_rest_day
+                {isRestDay
                   ? 'Rest Day'
-                  : todaysPlan && 'difficulty' in todaysPlan
-                    ? `${todaysPlan.difficulty.charAt(0).toUpperCase() + todaysPlan.difficulty.slice(1)} • ${todaysPlan.exercises.length} exercises`
-                    : 'Loading...'}
+                  : `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} • ${exercises.length} exercises`}
               </p>
             </div>
             <motion.button
@@ -156,8 +147,8 @@ export default function DashboardPage() {
 
           {/* Exercise List */}
           <div className="space-y-3">
-            {todaysPlan && 'exercises' in todaysPlan
-              ? todaysPlan.exercises.slice(0, 3).map((exercise, index) => (
+            {!isRestDay && exercises.length > 0
+              ? exercises.slice(0, 3).map((exercise: any, index: number) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: -20 }}
@@ -187,22 +178,24 @@ export default function DashboardPage() {
               </motion.div>
             ))
               : <div className="p-4 bg-gray-50 rounded-xl text-center text-gray-500">
-                  {'is_rest_day' in todaysPlan && todaysPlan.message || 'Rest Day'}
+                  No workout today — it&apos;s a rest day. Recovery is part of the plan!
                 </div>}
           </div>
 
           {/* AI Coach Tip */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-            <div className="flex gap-3">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Zap className="text-white" size={16} />
-              </div>
-              <div>
-                <h4 className="font-semibold text-blue-900 mb-1">AI Coach Tip</h4>
-                <p className="text-sm text-blue-700">{aiCoachTip}</p>
+          {coachTip && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Zap className="text-white" size={16} />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-1">AI Coach Tip</h4>
+                  <p className="text-sm text-blue-700">{coachTip}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </motion.div>
 
         {/* Right Column - Cards */}
@@ -234,9 +227,9 @@ export default function DashboardPage() {
                 </div>
               </div>
               <p className="text-xs text-gray-500 leading-relaxed">
-                Based on your recent workout logs ({thisWeekLogs.length} sessions this week),
+                Based on your recent workout logs ({stats?.workoutCount || 0} sessions this week),
                 it&apos;s a great day for a{' '}
-                {(todaysPlan && 'difficulty' in todaysPlan) ? todaysPlan.difficulty : 'moderate'} session.
+                {isRestDay ? 'rest' : difficulty} session.
               </p>
             </div>
           </motion.div>
@@ -254,7 +247,7 @@ export default function DashboardPage() {
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-gray-600">Protein Goal</span>
                 <span className="text-sm font-semibold text-gray-800">
-                  {proteinCurrent}/{proteinTarget}g
+                  {nutrition.proteinCurrent || 0}/{nutrition.proteinTarget || 0}g
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -262,14 +255,14 @@ export default function DashboardPage() {
                   className="bg-orange-500 h-2 rounded-full"
                   initial={{ width: 0 }}
                   animate={{
-                    width: `${Math.min((proteinCurrent / proteinTarget) * 100, 100)}%`,
+                    width: `${Math.min(((nutrition.proteinCurrent || 0) / (nutrition.proteinTarget || 1)) * 100, 100)}%`,
                   }}
                   transition={{ duration: 1, ease: 'easeOut', delay: 0.7 }}
                 />
               </div>
-              {latestMeal && (
+              {nutrition.latestMeal && (
                 <p className="text-xs text-gray-500 mt-2">
-                  Last: {latestMeal.meal_text.substring(0, 50)}…
+                  Last: {nutrition.latestMeal.meal_text?.substring(0, 50)}…
                 </p>
               )}
             </div>
@@ -285,7 +278,7 @@ export default function DashboardPage() {
               <h3 className="font-bold text-gray-800">Activity Log</h3>
             </div>
             <div className="grid grid-cols-7 gap-2">
-              {weeklyActivity.map((item, index) => (
+              {weeklyActivity.map((item: any, index: number) => (
                 <div key={index} className="text-center">
                   <div className="text-xs text-gray-500 mb-2">{item.day}</div>
                   <div

@@ -69,6 +69,7 @@ export const signupController = AsyncHandler(
       success: true,
       message: "Signup successful. Please verify your email before logging in.",
       user: data.user,
+      token: data.session?.access_token || null,
     });
   }
 );
@@ -136,6 +137,7 @@ export const loginController = AsyncHandler(
         ...user,
         profile_completed: profileData?.profile_completed || false,
       },
+      token: data.session?.access_token || null,
     });
   }
 );
