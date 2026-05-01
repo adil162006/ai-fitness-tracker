@@ -1,25 +1,22 @@
 // =============================================================================
 // Mock Data — Strictly Based on the EER Model
 // =============================================================================
-// All field names, data types, and relationships follow the provided schema.
-// This file serves as the single source of truth for frontend mock data.
-// =============================================================================
 
 // ── Users ────────────────────────────────────────────────────────────────────
 
 export interface User {
-  id: string;             // uuid [pk]
-  name: string;           // text
-  email: string;          // text
-  age: number;            // int
-  height_cm: number;      // int
-  weight_kg: number;      // int
-  fitness_goal: string;   // text
-  experience_level: string; // text
-  weekly_availability: number; // int
-  profile_completed: boolean;  // boolean [default: false]
-  created_at: string;     // timestamp
-  updated_at: string;     // timestamp
+  id: string;
+  name: string;
+  email: string;
+  age: number;
+  height_cm: number;
+  weight_kg: number;
+  fitness_goal: string;
+  experience_level: string;
+  weekly_availability: number;
+  profile_completed: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export const mockUser: User = {
@@ -31,192 +28,174 @@ export const mockUser: User = {
   weight_kg: 78,
   fitness_goal: 'gain-muscle',
   experience_level: 'intermediate',
-  weekly_availability: 5,
+  weekly_availability: 4,
   profile_completed: true,
   created_at: '2025-06-15T08:30:00Z',
   updated_at: '2026-03-28T14:22:00Z',
 };
 
-// ── Workout Plans ────────────────────────────────────────────────────────────
+// ── Workout Plans ─────────────────────────────────────────────────────────────
+// Matches backend Exercise interface exactly — no weight field, rest_seconds not rest_time, note not notes
 
 export interface WorkoutPlanExercise {
   name: string;
   sets: number;
-  reps: number | string;
-  weight: string;
-  rest_time: string;
-  notes: string;
+  reps: string;          // always string e.g. "8-10" or "12"
+  rest_seconds: number;  // backend returns seconds as number
+  note: string;          // singular, not notes
 }
 
+export type DayOfWeek =
+  | 'Monday' | 'Tuesday' | 'Wednesday'
+  | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'none';
+
 export interface WorkoutPlan {
-  id: string;             // uuid [pk]
-  user_id: string;        // uuid [ref: > users.id]
-  date: string;           // date
-  exercises: WorkoutPlanExercise[]; // jsonb
-  difficulty: string;     // text
-  explanation: string;    // text
-  source: string;         // text
-  created_at: string;     // timestamp
+  id: string;
+  user_id: string;
+  date: string;
+  week_start: string;
+  day_of_week: DayOfWeek;
+  exercises: WorkoutPlanExercise[];
+  is_rest_day: boolean;
+  difficulty: Difficulty;
+  explanation: string;
+  source: string;
+  created_at: string;
 }
+
+export interface RestDayResponse {
+  is_rest_day: true;
+  day_of_week: DayOfWeek;
+  message: string;
+}
+
+export type TodayPlanResponse = WorkoutPlan | RestDayResponse;
 
 export const mockWorkoutPlans: WorkoutPlan[] = [
   {
     id: 'wp-001-a1b2-c3d4-e5f6-789012340001',
     user_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    date: '2026-03-30',
+    date: '2026-04-28',
+    week_start: '2026-04-28',
+    day_of_week: 'Monday',
+    is_rest_day: false,
     exercises: [
       {
         name: 'Barbell Bench Press',
         sets: 4,
-        reps: 8,
-        weight: '80 kg',
-        rest_time: '90 sec',
-        notes: 'Focus on controlled eccentric phase',
+        reps: '8-10',
+        rest_seconds: 90,
+        note: 'Focus on controlled eccentric phase',
       },
       {
         name: 'Incline Dumbbell Press',
         sets: 3,
-        reps: 10,
-        weight: '28 kg',
-        rest_time: '60 sec',
-        notes: 'Full range of motion, squeeze at top',
+        reps: '10-12',
+        rest_seconds: 60,
+        note: 'Full range of motion, squeeze at top',
       },
       {
         name: 'Overhead Press',
         sets: 3,
-        reps: 8,
-        weight: '45 kg',
-        rest_time: '90 sec',
-        notes: 'Brace core, no back lean',
+        reps: '8',
+        rest_seconds: 90,
+        note: 'Brace core, no back lean',
       },
       {
         name: 'Cable Flyes',
         sets: 3,
-        reps: 12,
-        weight: '15 kg',
-        rest_time: '45 sec',
-        notes: 'Keep slight bend in elbows throughout',
+        reps: '12',
+        rest_seconds: 45,
+        note: 'Keep slight bend in elbows throughout',
       },
       {
         name: 'Tricep Dips',
         sets: 3,
-        reps: 'to failure',
-        weight: 'Bodyweight',
-        rest_time: '60 sec',
-        notes: 'Lean forward slightly for chest activation',
+        reps: '10-12',
+        rest_seconds: 60,
+        note: 'Lean forward slightly for chest activation',
       },
     ],
-    difficulty: 'intermediate',
+    difficulty: 'medium',
     explanation:
-      "Today's push-focused session targets chest, shoulders, and triceps. Based on your recovery metrics (85% readiness) and recent volume trends, we're progressively overloading your bench press by 2.5kg. The cable flyes will maximize hypertrophy through constant tension.",
-    source: 'ai-generated',
-    created_at: '2026-03-30T05:00:00Z',
+      "Push-focused session targeting chest, shoulders, and triceps. Volume and intensity are matched to your intermediate level and muscle-gain goal. Progressive overload applied to bench press.",
+    source: 'gemini',
+    created_at: '2026-04-28T05:00:00Z',
   },
   {
     id: 'wp-002-a1b2-c3d4-e5f6-789012340002',
     user_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    date: '2026-03-29',
+    date: '2026-04-29',
+    week_start: '2026-04-28',
+    day_of_week: 'Tuesday',
+    is_rest_day: false,
     exercises: [
       {
         name: 'Barbell Squats',
         sets: 4,
-        reps: 8,
-        weight: '100 kg',
-        rest_time: '120 sec',
-        notes: 'Focus on depth and controlled descent',
+        reps: '8',
+        rest_seconds: 120,
+        note: 'Focus on depth and controlled descent',
       },
       {
         name: 'Romanian Deadlifts',
         sets: 3,
-        reps: 10,
-        weight: '80 kg',
-        rest_time: '90 sec',
-        notes: 'Maintain neutral spine throughout',
+        reps: '10',
+        rest_seconds: 90,
+        note: 'Maintain neutral spine throughout',
       },
       {
         name: 'Bulgarian Split Squats',
         sets: 3,
-        reps: '10/leg',
-        weight: '20 kg',
-        rest_time: '60 sec',
-        notes: 'Keep torso upright, control the movement',
+        reps: '10',
+        rest_seconds: 60,
+        note: 'Keep torso upright, control the movement',
       },
       {
         name: 'Leg Press',
         sets: 3,
-        reps: 12,
-        weight: '140 kg',
-        rest_time: '60 sec',
-        notes: 'Full range of motion, no lockout at top',
+        reps: '12',
+        rest_seconds: 60,
+        note: 'Full range of motion, no lockout at top',
       },
       {
         name: 'Standing Calf Raises',
         sets: 4,
-        reps: 15,
-        weight: '60 kg',
-        rest_time: '45 sec',
-        notes: 'Pause at the top for 2 seconds',
+        reps: '15',
+        rest_seconds: 45,
+        note: 'Pause at the top for 2 seconds',
       },
     ],
-    difficulty: 'intermediate',
+    difficulty: 'hard',
     explanation:
-      "Lower body day with emphasis on compound movements. Your squat has been progressing well — increasing load by 5kg from last session. RDLs are added to strengthen the posterior chain which will support your deadlift goals.",
-    source: 'ai-generated',
-    created_at: '2026-03-29T05:00:00Z',
-  },
-  {
-    id: 'wp-003-a1b2-c3d4-e5f6-789012340003',
-    user_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    date: '2026-03-28',
-    exercises: [
-      {
-        name: 'Pull-ups',
-        sets: 4,
-        reps: 8,
-        weight: 'Bodyweight + 10 kg',
-        rest_time: '90 sec',
-        notes: 'Full hang to chin over bar',
-      },
-      {
-        name: 'Barbell Rows',
-        sets: 4,
-        reps: 8,
-        weight: '70 kg',
-        rest_time: '90 sec',
-        notes: 'Squeeze shoulder blades at top',
-      },
-      {
-        name: 'Seated Cable Row',
-        sets: 3,
-        reps: 12,
-        weight: '55 kg',
-        rest_time: '60 sec',
-        notes: 'Keep elbows close to body',
-      },
-      {
-        name: 'Face Pulls',
-        sets: 3,
-        reps: 15,
-        weight: '20 kg',
-        rest_time: '45 sec',
-        notes: 'External rotation at the top',
-      },
-      {
-        name: 'Barbell Curls',
-        sets: 3,
-        reps: 10,
-        weight: '30 kg',
-        rest_time: '45 sec',
-        notes: 'No swinging, strict form',
-      },
-    ],
-    difficulty: 'intermediate',
-    explanation:
-      "Pull day targeting back and biceps. Weighted pull-ups are progressing well. Adding face pulls for shoulder health and posture correction based on your seated work hours.",
-    source: 'ai-generated',
-    created_at: '2026-03-28T05:00:00Z',
+      "Lower body day emphasising compound movements. Squat load progresses from last week. RDLs strengthen the posterior chain to support overall pulling strength.",
+    source: 'gemini',
+    created_at: '2026-04-29T05:00:00Z',
   },
 ];
+
+// ── Helper ────────────────────────────────────────────────────────────────────
+
+export const getTodaysPlan = (): TodayPlanResponse => {
+  const today = new Date().toISOString().split('T')[0]!;
+  const todayDayIndex = new Date().getDay();
+  const days: DayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayName = days[todayDayIndex] as DayOfWeek;
+
+  const plan = mockWorkoutPlans.find((p) => p.date === today || p.day_of_week === todayName);
+
+  if (!plan) {
+    return {
+      is_rest_day: true,
+      day_of_week: todayName,
+      message: "No workout today — it's a rest day. Recovery is part of the plan!",
+    };
+  }
+
+  return plan;
+};
 
 // ── Workout Logs ─────────────────────────────────────────────────────────────
 
@@ -228,15 +207,15 @@ export interface WorkoutLogExercise {
 }
 
 export interface WorkoutLog {
-  id: string;             // uuid [pk]
-  user_id: string;        // uuid [ref: > users.id]
-  date: string;           // date
-  exercises: WorkoutLogExercise[]; // jsonb
-  duration_minutes: number; // int
-  intensity: string;      // text
-  soreness_reported: boolean; // boolean
-  notes: string;          // text
-  created_at: string;     // timestamp
+  id: string;
+  user_id: string;
+  date: string;
+  exercises: WorkoutLogExercise[];
+  duration_minutes: number;
+  intensity: string;
+  soreness_reported: boolean;
+  notes: string;
+  created_at: string;
 }
 
 export const mockWorkoutLogs: WorkoutLog[] = [
@@ -344,12 +323,12 @@ export const mockWorkoutLogs: WorkoutLog[] = [
 // ── AI Insights ──────────────────────────────────────────────────────────────
 
 export interface AiInsight {
-  id: string;             // uuid [pk]
-  user_id: string;        // uuid [ref: > users.id]
-  type: string;           // text
-  content: string;        // text
-  generated_for_date: string; // date
-  created_at: string;     // timestamp
+  id: string;
+  user_id: string;
+  type: string;
+  content: string;
+  generated_for_date: string;
+  created_at: string;
 }
 
 export const mockAiInsights: AiInsight[] = [
@@ -403,13 +382,13 @@ export const mockAiInsights: AiInsight[] = [
 // ── Weekly Summaries ─────────────────────────────────────────────────────────
 
 export interface WeeklySummary {
-  id: string;             // uuid [pk]
-  user_id: string;        // uuid [ref: > users.id]
-  week_start: string;     // date
-  week_end: string;       // date
-  summary_text: string;   // text
-  consistency_score: number; // int
-  created_at: string;     // timestamp
+  id: string;
+  user_id: string;
+  week_start: string;
+  week_end: string;
+  summary_text: string;
+  consistency_score: number;
+  created_at: string;
 }
 
 export const mockWeeklySummaries: WeeklySummary[] = [
@@ -448,11 +427,11 @@ export const mockWeeklySummaries: WeeklySummary[] = [
 // ── Meals ────────────────────────────────────────────────────────────────────
 
 export interface Meal {
-  id: string;             // uuid [pk]
-  user_id: string;        // uuid [ref: > users.id]
-  meal_text: string;      // text
-  ai_feedback: string;    // text
-  logged_at: string;      // timestamp
+  id: string;
+  user_id: string;
+  meal_text: string;
+  ai_feedback: string;
+  logged_at: string;
 }
 
 export const mockMeals: Meal[] = [
@@ -490,57 +469,45 @@ export const mockMeals: Meal[] = [
   },
 ];
 
-// ── Derived / Helper Data (computed from the models above) ───────────────────
+// ── Other helpers (unchanged) ─────────────────────────────────────────────────
 
-/** Today's workout plan (convenience accessor) */
-export const getTodaysPlan = (): WorkoutPlan | undefined => {
-  const today = new Date().toISOString().split('T')[0];
-  return mockWorkoutPlans.find((p) => p.date === today) || mockWorkoutPlans[0];
-};
-
-/** This week's workout logs */
 export const getThisWeekLogs = (): WorkoutLog[] => {
   const now = new Date();
   const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+  startOfWeek.setDate(now.getDate() - now.getDay() + 1);
   startOfWeek.setHours(0, 0, 0, 0);
-
   return mockWorkoutLogs.filter((log) => new Date(log.date) >= startOfWeek);
 };
 
-/** Latest weekly summary */
 export const getLatestWeeklySummary = (): WeeklySummary => {
-  return mockWeeklySummaries[0];
+  return mockWeeklySummaries[0]!;
 };
 
-/** Total duration this week in hours */
 export const getWeeklyDurationHours = (): number => {
   const logs = getThisWeekLogs();
   const totalMinutes = logs.reduce((sum, log) => sum + log.duration_minutes, 0);
   return Math.round((totalMinutes / 60) * 10) / 10;
 };
 
-/** Number of workouts completed this week */
 export const getWeeklyWorkoutCount = (): number => {
   return getThisWeekLogs().length;
 };
 
-/** Daily activity for the current week (Mon-Sun) */
 export const getWeeklyActivityMap = (): { day: string; hasWorkout: boolean; volume: number }[] => {
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const now = new Date();
   const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+  startOfWeek.setDate(now.getDate() - now.getDay() + 1);
 
   return dayLabels.map((label, index) => {
     const date = new Date(startOfWeek);
     date.setDate(startOfWeek.getDate() + index);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0]!;
     const log = mockWorkoutLogs.find((l) => l.date === dateStr);
     return {
       day: label,
       hasWorkout: !!log,
-      volume: log ? log.duration_minutes * 50 : 0, // rough volume estimate
+      volume: log ? log.duration_minutes * 50 : 0,
     };
   });
 };

@@ -35,13 +35,17 @@ export default function WorkoutLogPage() {
   // ── EER-based data ─────────────────────────────────────────────────────
   const plan = getTodaysPlan();
 
+  // Safely handle both WorkoutPlan and RestDayResponse
+  const planExercises = plan && 'exercises' in plan ? plan.exercises : [];
+  const isRestDay = plan && 'is_rest_day' in plan ? plan.is_rest_day : false;
+
   const todaysPlan = {
     date: mounted ? new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
-    exercises: plan?.exercises.map((ex) => ({
+    exercises: planExercises.map((ex) => ({
       name: ex.name,
       sets: `${ex.sets} sets x ${ex.reps} reps`,
-      weight: ex.weight,
-    })) || [],
+      weight: 'rest_seconds' in ex ? ex.rest_seconds : 0, // WorkoutPlanExercise uses rest_seconds
+    })),
   };
 
   // Quick stats derived from workout_logs
@@ -60,6 +64,13 @@ export default function WorkoutLogPage() {
 
   const removeExercise = (index: number) => {
     setExercises(exercises.filter((_, i) => i !== index));
+  };
+
+  // Form field change handlers
+  const updateExercise = (index: number, field: keyof Exercise, value: string | number) => {
+    const updated = [...exercises];
+    updated[index] = { ...updated[index], [field]: value };
+    setExercises(updated);
   };
 
   return (
@@ -160,6 +171,7 @@ export default function WorkoutLogPage() {
                         type="text"
                         placeholder="e.g. Squats"
                         value={exercise.name}
+                        onChange={(e) => updateExercise(index, 'name', e.target.value)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                       />
                     </div>
@@ -172,6 +184,7 @@ export default function WorkoutLogPage() {
                         type="number"
                         placeholder="3"
                         value={exercise.sets || ''}
+                        onChange={(e) => updateExercise(index, 'sets', parseInt(e.target.value) || 0)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                       />
                     </div>
@@ -184,6 +197,7 @@ export default function WorkoutLogPage() {
                         type="number"
                         placeholder="10"
                         value={exercise.reps || ''}
+                        onChange={(e) => updateExercise(index, 'reps', parseInt(e.target.value) || 0)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                       />
                     </div>
@@ -196,6 +210,7 @@ export default function WorkoutLogPage() {
                         type="number"
                         placeholder="60"
                         value={exercise.weight || ''}
+                        onChange={(e) => updateExercise(index, 'weight', parseInt(e.target.value) || 0)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                       />
                     </div>
@@ -207,6 +222,7 @@ export default function WorkoutLogPage() {
                     </label>
                     <select
                       value={exercise.intensity}
+                      onChange={(e) => updateExercise(index, 'intensity', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                     >
                       <option value="Low">Low</option>

@@ -1,59 +1,85 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Dumbbell, ChevronRight, Zap, Play, Calendar, FileText } from 'lucide-react';
+import { Dumbbell, ChevronRight, Zap, Play, Calendar, FileText, Moon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getTodaysPlan } from '@/lib/mockData';
+import type { WorkoutPlan, RestDayResponse } from '@/lib/mockData';
 
 export default function WorkoutPage() {
-  const [todaysDate, setTodaysDate] = useState<string>('');
 
-  useEffect(() => {
-    setTodaysDate(new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }));
-  }, []);
+  const todaysDate = new Date().toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
 
-  // ── EER-based data from workout_plans ──────────────────────────────────
-  const plan = getTodaysPlan();
 
-  const todaysPlan = {
-    date: todaysDate,
-    type: plan
-      ? plan.difficulty.charAt(0).toUpperCase() + plan.difficulty.slice(1) + ' Push Day'
-      : 'Rest Day',
-    difficulty: plan?.difficulty
-      ? plan.difficulty.charAt(0).toUpperCase() + plan.difficulty.slice(1)
-      : 'N/A',
-    estimatedTime: plan
-      ? `${Math.round(plan.exercises.length * 8)}-${Math.round(plan.exercises.length * 12)} min`
-      : '0 min',
-    exercises: plan?.exercises || [],
-    aiExplanation: plan?.explanation || 'No workout planned for today. Consider active recovery.',
-    source: plan?.source || 'none',
-  };
+
+const response = getTodaysPlan();
+
+// ✅ Properly narrow the union — TypeScript now knows the exact shape in each branch
+const isRestDay = response.is_rest_day;
+const plan = isRestDay ? null : (response as WorkoutPlan);
+const restMessage = isRestDay ? (response as RestDayResponse).message : null;
+
+const todaysPlan = {
+  date: todaysDate,
+  day_of_week: response.day_of_week,
+  type: plan
+    ? plan.difficulty.charAt(0).toUpperCase() + plan.difficulty.slice(1) + ' Training Day'
+    : 'Rest Day',
+  difficulty: plan
+    ? plan.difficulty.charAt(0).toUpperCase() + plan.difficulty.slice(1)
+    : 'N/A',
+  estimatedTime: plan
+    ? `${Math.round(plan.exercises.length * 8)}-${Math.round(plan.exercises.length * 12)} min`
+    : '0 min',
+  exercises: plan?.exercises ?? [],
+  aiExplanation: plan?.explanation ?? restMessage ?? 'No workout planned for today.',
+  source: plan?.source ?? 'none',
+};
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08
-      }
-    }
+    visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4 }
-    }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   };
 
+  // ── Rest day screen ───────────────────────────────────────────────────────
+  if (isRestDay) {
+    return (
+      <motion.div
+        className="max-w-7xl mx-auto space-y-6"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div variants={itemVariants} className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Today&apos;s Plan</h1>
+            <p className="text-gray-500 mt-1">{todaysDate}</p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          variants={itemVariants}
+          className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-sm p-10 text-center"
+        >
+          <Moon size={48} className="mx-auto text-gray-400 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">Rest Day</h2>
+          <p className="text-gray-500 max-w-md mx-auto">{todaysPlan.aiExplanation}</p>
+          <p className="text-sm text-gray-400 mt-2">{todaysPlan.day_of_week}</p>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  // ── Workout screen ────────────────────────────────────────────────────────
   return (
     <motion.div
       className="max-w-7xl mx-auto space-y-6"
@@ -123,15 +149,12 @@ export default function WorkoutPage() {
             <FileText size={20} className="flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold mb-1">AI Coach Explanation</h3>
-              <p className="text-sm text-blue-50 leading-relaxed">
-                {todaysPlan.aiExplanation}
-              </p>
+              <p className="text-sm text-blue-50 leading-relaxed">{todaysPlan.aiExplanation}</p>
             </div>
           </div>
         </motion.div>
 
-        {/* Source badge */}
-        {todaysPlan.source === 'ai-generated' && (
+        {todaysPlan.source === 'gemini' && (
           <div className="mt-3 inline-flex items-center gap-1 px-2 py-1 bg-white/10 rounded-lg text-xs text-blue-100">
             <Zap size={12} /> AI-Generated Plan
           </div>
@@ -142,9 +165,7 @@ export default function WorkoutPage() {
       <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-xl font-bold text-gray-800">Exercise Breakdown</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            Follow the exercises in order for optimal results
-          </p>
+          <p className="text-sm text-gray-500 mt-1">Follow the exercises in order for optimal results</p>
         </div>
 
         <div className="divide-y divide-gray-200">
@@ -154,12 +175,11 @@ export default function WorkoutPage() {
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 + 0.4, duration: 0.5 }}
-              whileHover={{ backgroundColor: "rgba(249,250,251,1)", scale: 1.005 }}
+              whileHover={{ backgroundColor: 'rgba(249,250,251,1)', scale: 1.005 }}
               className="p-6 cursor-pointer group"
             >
               <div className="flex items-start justify-between">
                 <div className="flex gap-4 flex-1">
-                  {/* Exercise Number */}
                   <motion.div
                     className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center font-bold text-blue-600 flex-shrink-0"
                     whileHover={{ scale: 1.1, rotate: 5 }}
@@ -167,14 +187,10 @@ export default function WorkoutPage() {
                     {index + 1}
                   </motion.div>
 
-                  {/* Exercise Details */}
                   <div className="flex-1">
-                    <h4 className="text-lg font-bold text-gray-800 mb-2">
-                      {exercise.name}
-                    </h4>
+                    <h4 className="text-lg font-bold text-gray-800 mb-2">{exercise.name}</h4>
 
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-3">
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Sets</p>
                         <p className="font-semibold text-gray-800">{exercise.sets}</p>
@@ -184,26 +200,26 @@ export default function WorkoutPage() {
                         <p className="font-semibold text-gray-800">{exercise.reps}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 mb-1">Weight</p>
-                        <p className="font-semibold text-gray-800">{exercise.weight}</p>
-                      </div>
-                      <div>
                         <p className="text-xs text-gray-500 mb-1">Rest</p>
-                        <p className="font-semibold text-gray-800">{exercise.rest_time}</p>
+                        {/* ✅ rest_seconds → human readable */}
+                        <p className="font-semibold text-gray-800">
+                          {exercise.rest_seconds >= 60
+                            ? `${Math.floor(exercise.rest_seconds / 60)}m ${exercise.rest_seconds % 60 > 0 ? `${exercise.rest_seconds % 60}s` : ''}`.trim()
+                            : `${exercise.rest_seconds}s`}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Notes */}
+                    {/* ✅ note not notes */}
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
                       <p className="text-sm text-yellow-800">
                         <span className="font-semibold">Note: </span>
-                        {exercise.notes}
+                        {exercise.note}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Arrow Icon */}
                 <ChevronRight
                   className="text-gray-400 group-hover:text-gray-600 transition-colors flex-shrink-0 ml-4"
                   size={24}

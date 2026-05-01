@@ -15,6 +15,5 @@ const generateWorkoutSchema = {
             description:"Brief explanation of why the workout plan is suitable for the user's profile and goals"
         }
     }
-
 }
 

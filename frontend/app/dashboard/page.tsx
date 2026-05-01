@@ -138,9 +138,11 @@ export default function DashboardPage() {
             <div>
               <h2 className="text-xl font-bold text-gray-800">Today&apos;s Plan</h2>
               <p className="text-sm text-gray-500">
-                {todaysPlan
-                  ? `${todaysPlan.difficulty.charAt(0).toUpperCase() + todaysPlan.difficulty.slice(1)} • ${todaysPlan.exercises.length} exercises`
-                  : 'Rest Day'}
+                {todaysPlan && 'is_rest_day' in todaysPlan && todaysPlan.is_rest_day
+                  ? 'Rest Day'
+                  : todaysPlan && 'difficulty' in todaysPlan
+                    ? `${todaysPlan.difficulty.charAt(0).toUpperCase() + todaysPlan.difficulty.slice(1)} • ${todaysPlan.exercises.length} exercises`
+                    : 'Loading...'}
               </p>
             </div>
             <motion.button
@@ -154,7 +156,8 @@ export default function DashboardPage() {
 
           {/* Exercise List */}
           <div className="space-y-3">
-            {todaysPlan?.exercises.slice(0, 3).map((exercise, index) => (
+            {todaysPlan && 'exercises' in todaysPlan
+              ? todaysPlan.exercises.slice(0, 3).map((exercise, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: -20 }}
@@ -173,7 +176,7 @@ export default function DashboardPage() {
                   <div>
                     <h3 className="font-semibold text-gray-800">{exercise.name}</h3>
                     <p className="text-sm text-gray-500">
-                      {exercise.sets} sets x {exercise.reps} reps • {exercise.weight}
+                      {exercise.sets} sets x {exercise.reps} reps • {exercise.rest_seconds}s rest
                     </p>
                   </div>
                 </div>
@@ -182,7 +185,10 @@ export default function DashboardPage() {
                   size={20}
                 />
               </motion.div>
-            ))}
+            ))
+              : <div className="p-4 bg-gray-50 rounded-xl text-center text-gray-500">
+                  {'is_rest_day' in todaysPlan && todaysPlan.message || 'Rest Day'}
+                </div>}
           </div>
 
           {/* AI Coach Tip */}
@@ -230,7 +236,7 @@ export default function DashboardPage() {
               <p className="text-xs text-gray-500 leading-relaxed">
                 Based on your recent workout logs ({thisWeekLogs.length} sessions this week),
                 it&apos;s a great day for a{' '}
-                {todaysPlan?.difficulty || 'moderate'} session.
+                {(todaysPlan && 'difficulty' in todaysPlan) ? todaysPlan.difficulty : 'moderate'} session.
               </p>
             </div>
           </motion.div>
