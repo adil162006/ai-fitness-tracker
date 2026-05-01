@@ -12,7 +12,8 @@ import {
   User,
   Menu,
   Bell,
-  LogOut
+  LogOut,
+  History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { mockUser } from '@/lib/mockData';
@@ -34,6 +35,7 @@ export default function DashboardLayout({
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Dumbbell, label: 'Workout', path: '/dashboard/workout' },
     { icon: Calendar, label: 'Log', path: '/dashboard/workout/log' },
+    { icon: History, label: 'History', path: '/dashboard/workout/history' },
     { icon: TrendingUp, label: 'Insights', path: '/dashboard/insights' },
     { icon: Activity, label: 'Weekly Summary', path: '/dashboard/summary' },
     { icon: User, label: 'Profile', path: '/dashboard/profile' },

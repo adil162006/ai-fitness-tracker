@@ -332,31 +332,7 @@ export default function DashboardPage() {
         ))}
       </motion.div>
 
-      {/* Next AI Check-In */}
-      <motion.div
-        variants={itemVariants}
-        className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl shadow-sm p-6 text-white"
-        whileHover={{ scale: 1.01 }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-lg mb-1">Next AI Check-In</h3>
-            <p className="text-white/80 text-sm">
-              Time for your weekly progress analysis
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold">In 4h</div>
-            <motion.button
-              className="mt-2 bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Schedule Now
-            </motion.button>
-          </div>
-        </div>
-      </motion.div>
+      
     </motion.div>
   );
 }

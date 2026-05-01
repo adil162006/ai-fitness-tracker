@@ -109,30 +109,7 @@ export default function WorkoutLogPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Form Area */}
         <div className="lg:col-span-2 space-y-6">
-          {/* AI Natural Language Input */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Sparkles className="text-blue-600" size={18} />
-              </div>
-              <h3 className="text-lg font-bold text-gray-800">AI Natural Language Input</h3>
-            </div>
-
-            <div className="relative">
-              <textarea
-                className="w-full h-32 p-4 border-2 border-gray-200 rounded-xl resize-none focus:border-blue-500 focus:outline-none"
-                placeholder="Describe your workout in your own words (e.g., 'I did 3 sets of 10 bench press at 60kg and then 15 minutes on the treadmill')"
-              />
-              <button className="absolute bottom-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                <Mic size={20} className="text-gray-600" />
-              </button>
-            </div>
-
-            <button className="mt-4 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
-              <Sparkles size={18} />
-              Convert to Log
-            </button>
-          </div>
+          
 
           {/* Structured Log Form */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
