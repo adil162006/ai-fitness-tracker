@@ -9,6 +9,8 @@ import aiRoutes from './routes/ai.routes'
 import dashboardRoutes from './routes/dashboard.routes'
 import insightsRoutes from './routes/insights.routes'
 import workoutLogRoutes from './routes/workoutLog.route'
+import weeklySummaryRoutes from './routes/weeklySummary.routes'
+import workoutHistoryRoutes from './routes/workoutHistory.routes'
 
 const router = Router();
 const app =express();
@@ -31,6 +33,8 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/insights", insightsRoutes);
 app.use("/api/workouts", workoutLogRoutes);
+app.use("/api/workouts", workoutHistoryRoutes);
+app.use("/api/weekly-summary", weeklySummaryRoutes);
 app.get("/health", (req:Request, res:Response) => {
   res.json({ status: "ok", message: "Server is running" });
 });
